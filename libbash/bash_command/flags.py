@@ -9,12 +9,6 @@ class OFlag(Enum):
     O_CREAT = 1 << 9
     O_TRUNC = 1 << 10
 
-    def __init__(self, oflag: int):
-        """
-        :param oflag: the integer value of the open flag
-        """
-        self.value = oflag
-
     def _to_json(self) -> str:
         """
         :return: the string representation of the open flag
@@ -85,12 +79,6 @@ class WordDescFlag(Enum):
     W_CHKLOCAL = 1 << 28         # check for local vars on assignment
     # force assignments to be to local variables, non-fatal on assignment errors
     W_FORCELOCAL = 1 << 29
-
-    def __init__(self, word_desc_flag: int):
-        """
-        :param word_desc_flag: the integer value of the word description flag
-        """
-        self.value = word_desc_flag
 
     def _to_json(self) -> str:
         """
@@ -193,12 +181,6 @@ class CommandFlag(Enum):
     CMD_STD_PATH = 1 << 14  # use default PATH for command lookup
     CMD_TRY_OPTIMIZING = 1 << 15  # try to optimize simple command
 
-    def __init__(self, command_flag: int):
-        """
-        :param command_flag: the integer value of the command flag
-        """
-        self.value = command_flag
-
     def _to_json(self) -> str:
         """
         :return: the string representation of the command flag
@@ -248,6 +230,7 @@ def command_flag_list_from_int(flag_int: int) -> list[CommandFlag]:
     for flag in CommandFlag:
         if flag_int & flag.value:
             flag_list.append(flag)
+    return flag_list
 
 
 class CommandType(Enum):
@@ -258,8 +241,8 @@ class CommandType(Enum):
     CM_CASE = 1  # switch case
     CM_WHILE = 2  # while loop
     CM_IF = 3  # if statement
-    CM_SELECT = 4  # select statement
-    CM_SIMPLE = 5  # simple command
+    CM_SIMPLE = 4  # simple command
+    CM_SELECT = 5  # select statement
     CM_CONNECTION = 6  # probably connectors like &,||, &&, ;
     CM_FUNCTION_DEF = 7  # function definition
     CM_UNTIL = 8  # until loop
@@ -269,12 +252,6 @@ class CommandType(Enum):
     CM_ARITH_FOR = 12  # probably for loop using (( ))
     CM_SUBSHELL = 13  # subshell via ( )
     CM_COPROC = 14  # coprocess
-
-    def __init__(self, command_type: int):
-        """
-        :param command_type: the integer value of the command type
-        """
-        self.value = command_type
 
     def _to_json(self) -> str:
         """
@@ -339,13 +316,6 @@ class RInstruction(Enum):
     R_MOVE_OUTPUT_WORD = 18  # 1>&$foo-
     R_APPEND_ERR_AND_OUT = 19  # &>> filename
 
-    def __init__(self, redirect_type: int):
-        """
-        :param redirect_type: the integer value of the redirection type
-        """
-        self.value = redirect_type
-
-    # converts redirection type actual bash redirection string
     def _to_json(self) -> str:
         """
         :return: the string representation of the redirection type
@@ -405,12 +375,6 @@ class CondTypeEnum(Enum):
     COND_TERM = 4
     COND_EXPR = 5
 
-    def __init__(self, cond_type: int):
-        """
-        :param cond_type: the integer value of the conditional expression type
-        """
-        self.value = cond_type
-
     def _to_json(self) -> str:
         """
         :return: the string representation of the conditional expression type
@@ -431,17 +395,44 @@ class CondTypeEnum(Enum):
             raise Exception('invalid conditional expression type')
 
 
+class ConnectionType(Enum):
+    """
+    a connection type enum - refer to execute_connection in execute_cmd.c
+    in the bash source code for more information, pretty funny approach
+    to this
+    """
+    AMPERSAND = 38
+    SEMICOLON = 59
+    NEWLINE = 10
+    PIPE = 124
+    AND_AND = 288
+    OR_OR = 289
+
+    def _to_json(self) -> str:
+        """
+        :return: the string representation of the connection type
+        """
+        if self == ConnectionType.AMPERSAND:
+            return '&'
+        elif self == ConnectionType.SEMICOLON:
+            return ';'
+        elif self == ConnectionType.NEWLINE:
+            return '\n'
+        elif self == ConnectionType.PIPE:
+            return '|'
+        elif self == ConnectionType.AND_AND:
+            return '&&'
+        elif self == ConnectionType.OR_OR:
+            return '||'
+        else:
+            raise Exception('invalid connection type')
+
+
 class RedirectFlag(Enum):
     """
     a redirect flag enum
     """
     REDIR_VARASSIGN = 1 << 0
-
-    def __init__(self, redirect_flag: int):
-        """
-        :param redirect_flag: the integer value of the redirect flag
-        """
-        self.value = redirect_flag
 
     def _to_json(self) -> str:
         """
@@ -467,12 +458,6 @@ def redirect_flag_list_from_rflags(rflags: int) -> list[RedirectFlag]:
 class PatternFlag(Enum):
     CASEPAT_FALLTHROUGH = 1 << 0  # fall through to next pattern
     CASEPAT_TESTNEXT = 1 << 1  # test next pattern
-
-    def __init__(self, pattern_flag: int):
-        """
-        :param pattern_flag: the integer value of the pattern flag
-        """
-        self.value = pattern_flag
 
     def _to_json(self) -> str:
         if self == PatternFlag.CASEPAT_FALLTHROUGH:

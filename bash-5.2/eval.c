@@ -398,6 +398,9 @@ int read_command()
 // libbash - equivalent to read_command, but calls setjmp to catch errors
 int read_command_safe()
 {
+  COMMAND *last_command = global_command;
+  if (last_command)
+    dispose_command(last_command);
   global_command = (COMMAND *)NULL;
 
   int code = setjmp_nosigs(top_level);

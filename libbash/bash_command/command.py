@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Union, Optional
 from ..bash_c_interface import ctypes_bash_command as c_bash
 import ctypes
-from flags import *
+from .flags import *
 
 
 class WordDesc:
@@ -13,10 +13,10 @@ class WordDesc:
         """
         :param word: the word description
         """
-        self.word = word.word
+        self.word = word.word.decode('utf-8')
         self.flags = word_desc_flag_list_from_int(word.flags)
 
-    def _to_json(self) -> dict[str, Union(int, str)]:
+    def _to_json(self) -> dict[str, Union[int, str]]:
         """
         :return: a dictionary representation of the word description
         """
@@ -26,15 +26,15 @@ class WordDesc:
         }
 
 
-def word_desc_list_from_word_list(word: ctypes.POINTER(c_bash.word_list)) -> list[WordDesc]:
+def word_desc_list_from_word_list(word_list: ctypes.POINTER(c_bash.word_list)) -> list[WordDesc]:
     """
     :param word: the word list
     :return: a list of word descriptions
     """
     word_desc_list = []
-    while word is not None:
-        word_desc_list.append(WordDesc(word.contents))
-        word = word.contents.next
+    while word_list:
+        word_desc_list.append(WordDesc(word_list.contents.word.contents))
+        word_list = word_list.contents.next
     return word_desc_list
 
 
@@ -42,17 +42,17 @@ class RedirecteeUnion:
     # use only if R_DUPLICATING_INPUT or R_DUPLICATING_OUTPUT
     dest: Optional[int]
     # use otherwise
-    word: Optional[WordDesc]
+    filename: Optional[WordDesc]
 
-    def __init__(self, dest: Optional[int], word: Optional[c_bash.word_desc]):
+    def __init__(self, dest: Optional[int], filename: Optional[c_bash.word_desc]):
         """
         :param dest: the destination file descriptor or None
         :param word: the word description or None
         """
-        self.dest = dest
-        self.word = None if word is None else WordDesc(word.contents)
+        self.dest = dest if dest is not None else None
+        self.filename = WordDesc(filename) if filename is not None else None
 
-    def _to_json(self) -> dict[str, Union(int, str, dict, list)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
         :return: a dictionary representation of the redirectee union
         """
@@ -60,9 +60,9 @@ class RedirecteeUnion:
             return {
                 'dest': self.dest
             }
-        elif self.word is not None:
+        elif self.filename is not None:
             return {
-                'word': self.word._to_json()
+                'filename': self.filename._to_json()
             }
         else:
             raise Exception('invalid redirectee')
@@ -86,17 +86,21 @@ class Redirect:
         self.rflags = redirect_flag_list_from_rflags(redirect.rflags)
         self.flags = oflag_list_from_int(redirect.flags)
         self.instruction = RInstruction(redirect.instruction)
-        if self.instruction == RInstruction.R_DUPLICATING_INPUT or self.instruction == RInstruction.R_DUPLICATING_OUTPUT:
+        self.here_doc_eof = redirect.here_doc_eof.decode('utf-8')
+        if RedirectFlag.REDIR_VARASSIGN in self.rflags:
+            self.redirector = RedirecteeUnion(
+                None, redirect.redirector.filename.contents)
+        else:
             self.redirector = RedirecteeUnion(redirect.redirector.dest, None)
+        if self.instruction == RInstruction.R_DUPLICATING_INPUT or \
+                self.instruction == RInstruction.R_DUPLICATING_OUTPUT or \
+                self.instruction == RInstruction.R_CLOSE_THIS:
             self.redirectee = RedirecteeUnion(redirect.redirectee.dest, None)
         else:
-            self.redirector = RedirecteeUnion(
-                None, redirect.redirector.word.contents)
             self.redirectee = RedirecteeUnion(
-                None, redirect.redirectee.word.contents)
-        self.here_doc_eof = redirect.here_doc_eof
+                None, redirect.redirectee.filename.contents)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict, list)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
         :return: a dictionary representation of the redirect struct
         """
@@ -112,7 +116,7 @@ class Redirect:
 
 def redirect_list_from_redirect(redirect: ctypes.POINTER(c_bash.redirect)) -> list[Redirect]:
     redirect_list = []
-    while redirect is not None:
+    while redirect:
         redirect_list.append(Redirect(redirect.contents))
         redirect = redirect.contents.next
     return redirect_list
@@ -135,9 +139,8 @@ class ForCom:
         self.map_list = word_desc_list_from_word_list(for_c.map_list)
         self.action = Command(for_c.action.contents)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict, list)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
-            'type': 'for',
             'flags': self.flags,
             'line': self.line,
             'name': self.name._to_json(),
@@ -159,7 +162,7 @@ class Pattern:
         self.action = Command(pattern.action.contents)
         self.flags = pattern_flag_list_from_int(pattern.flags)
 
-    def _to_json(self) -> dict[str, Union(int, dict, list)]:
+    def _to_json(self) -> dict[str, Union[int, dict, list]]:
         return {
             'patterns': [x._to_json() for x in self.patterns],
             'action': self.action._to_json(),
@@ -190,9 +193,8 @@ class CaseCom:
         self.word = WordDesc(case_c.word.contents)
         self.clauses = pattern_list_from_pattern_list(case_c.clauses)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict, list)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
-            'type': 'case',
             'flags': self.flags,
             'line': self.line,
             'word': self.word._to_json(),
@@ -213,9 +215,8 @@ class WhileCom:
         self.test = Command(while_c.test.contents)
         self.action = Command(while_c.action.contents)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'type': 'while',
             'flags': self.flags,
             'test': self.test._to_json(),
             'action': self.action._to_json()
@@ -237,9 +238,8 @@ class IfCom:
         self.true_case = Command(if_c.true_case.contents)
         self.false_case = Command(if_c.false_case.contents)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'type': 'if',
             'flags': self.flags,
             'test': self.test._to_json(),
             'true_case': self.true_case._to_json(),
@@ -254,17 +254,17 @@ class Connection:
     ignore: list[CommandFlag]
     first: 'Command'  # the first command to run
     second: 'Command'  # the second command to run
-    connector: int  # the connector to use?
+    connector: ConnectionType  # the type of connection
 
     def __init__(self, connection: c_bash.connection):
         self.ignore = command_flag_list_from_int(connection.ignore)
         self.first = Command(connection.first.contents)
         self.second = Command(connection.second.contents)
-        self.connector = connection.connector
+        self.connector = ConnectionType(connection.connector)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'type': 'connection',
+            'ignore': [x._to_json() for x in self.ignore],
             'first': self.first._to_json(),
             'second': self.second._to_json(),
             'connector': self.connector  # todo: figure out what this int means
@@ -286,10 +286,9 @@ class SimpleCom:
         self.words = word_desc_list_from_word_list(simple.words)
         self.redirects = redirect_list_from_redirect(simple.redirects)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict, list)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
-            'type': 'simple',
-            'flags': self.flags,
+            'flags': [x._to_json() for x in self.flags],
             'line': self.line,
             'words': [x._to_json() for x in self.words],
             'redirects': [x._to_json() for x in self.redirects]
@@ -313,9 +312,8 @@ class FunctionDef:
         self.command = Command(function.command.contents)
         self.source_file = function.source_file if function.source_file is not None else None
 
-    def _to_json(self) -> dict[str, Union(int, str, dict, None)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, None]]:
         return {
-            'type': 'function_def',
             'flags': self.flags,
             'line': self.line,
             'name': self.name._to_json(),
@@ -335,9 +333,9 @@ class GroupCom:
         self.ignore = command_flag_list_from_int(group.ignore)
         self.command = Command(group.command.contents)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'type': 'group',
+            'ignore': [x._to_json() for x in self.ignore],
             'command': self.command._to_json()
         }
 
@@ -359,9 +357,8 @@ class SelectCom:
         self.map_list = word_desc_list_from_word_list(select.map_list)
         self.action = Command(select.action.contents)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict, list)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
-            'type': 'select',
             'flags': self.flags,
             'line': self.line,
             'name': self.name._to_json(),
@@ -383,9 +380,8 @@ class ArithCom:
         self.line = arith.line
         self.exp = word_desc_list_from_word_list(arith.exp)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'type': 'arithmetic',
             'flags': self.flags,
             'line': self.line,
             'exp': [x._to_json() for x in self.exp]
@@ -413,9 +409,8 @@ class CondCom:
         self.right = CondCom(
             cond.right.contents) if cond.right is not None else None
 
-    def _to_json(self) -> dict[str, Union(int, str, dict)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'type': 'conditional',
             'flags': self.flags,
             'line': self.line,
             'cond_type': self.type._to_json(),
@@ -444,9 +439,8 @@ class ArithForCom:
         self.step = word_desc_list_from_word_list(arith_for.step)
         self.action = Command(arith_for.action.contents)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict, list)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
-            'type': 'arithmetic_for',
             'flags': [x._to_json() for x in self.flags],
             'line': self.line,
             'init': [x._to_json() for x in self.init],
@@ -469,9 +463,8 @@ class SubshellCom:
         self.line = subshell.line
         self.command = Command(subshell.command.contents)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'type': 'subshell',
             'flags': self.flags,
             'line': self.line,
             'command': self.command._to_json()
@@ -492,11 +485,10 @@ class CoprocCom:
         self.name = coproc.name.decode('utf-8')
         self.command = Command(coproc.command.contents)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'type': 'coproc',
             'flags': self.flags,
-            'name': self.name._to_json(),
+            'name': self.name,
             'command': self.command._to_json()
         }
 
@@ -622,7 +614,7 @@ class Command:
         self.redirects = redirect_list_from_redirect(bash_command.redirects)
         self.value = ValueUnion(self.type, bash_command.value)
 
-    def _to_json(self) -> dict[str, Union(int, str, dict, list)]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
             'type': self.type._to_json(),
             'flags': self.flags,

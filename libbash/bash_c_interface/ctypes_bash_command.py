@@ -25,50 +25,43 @@ class redirect(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n161
     """
-    _fields_ = [
-        ("next", POINTER('redirect')),
-        ("redirector", REDIRECTEE),
-        ("rflags", c_int),
-        ("flags", c_int),
-        ("instruction", c_int),
-        ("redirectee", REDIRECTEE),
-        ("here_doc_eof", c_char_p)
-    ]
+
+
+# we do this because we need to reference redirect in redirect
+redirect._fields_ = [
+    ("next", POINTER(redirect)),
+    ("redirector", REDIRECTEE),
+    ("rflags", c_int),
+    ("flags", c_int),
+    ("instruction", c_int),
+    ("redirectee", REDIRECTEE),
+    ("here_doc_eof", c_char_p)
+]
 
 
 class word_list(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n137
     """
-    _fields_ = [
-        ("next", POINTER('word_list')),
-        ("word", POINTER(word_desc))
-    ]
+
+
+# we do this because we need to reference word_list in word_list
+word_list._fields_ = [
+    ("next", POINTER(word_list)),
+    ("word", POINTER(word_desc))
+]
 
 
 class for_com(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n259
     """
-    _fields_ = [
-        ("flags", c_int),
-        ("line", c_int),
-        ("name", POINTER(word_desc)),
-        ("map_list", POINTER(word_list)),
-        ("action", POINTER('command'))
-    ]
 
 
 class pattern_list(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n243
     """
-    _fields_ = [
-        ("next", POINTER('pattern_list')),
-        ("patterns", POINTER(word_list)),
-        ("action", POINTER('command')),
-        ("flags", c_int)
-    ]
 
 
 class case_com(Structure):
@@ -87,83 +80,36 @@ class while_com(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n302
     """
-    _fields_ = [
-        ("flags", c_int),
-        ("test", POINTER('command')),
-        ("action", POINTER('command'))
-    ]
 
 
 class if_com(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n294
     """
-    _fields_ = [
-        ("flags", c_int),
-        ("test", POINTER('command')),
-        ("true_case", POINTER('command')),
-        ("false_case", POINTER('command'))
-    ]
 
 
 class connection(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n229
     """
-    _fields_ = [
-        ("ignore", c_int),
-        ("first", POINTER('command')),
-        ("second", POINTER('command')),
-        ("connector", c_int)
-    ]
-
-
-class simple_com(Structure):
-    """
-    https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n337
-    """
-    _fields_ = [
-        ("flags", c_int),
-        ("line", c_int),
-        ("words", POINTER(word_list)),
-        ("redirects", POINTER(redirect))
-    ]
 
 
 class function_def(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n346
     """
-    _fields_ = [
-        ("flags", c_int),
-        ("line", c_int),
-        ("name", POINTER(word_desc)),
-        ("command", POINTER('command')),
-        ("source_file", c_char_p)
-    ]
 
 
 class group_com(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n356
     """
-    _fields_ = [
-        ("ignore", c_int),
-        ("command", POINTER('command'))
-    ]
 
 
 class select_com(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n282
     """
-    _fields_ = [
-        ("flags", c_int),
-        ("line", c_int),
-        ("name", POINTER(word_desc)),
-        ("map_list", POINTER(word_list)),
-        ("action", POINTER('command'))
-    ]
 
 
 class arith_com(Structure):
@@ -181,49 +127,46 @@ class cond_com(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n328
     """
-    _fields_ = [
-        ("flags", c_int),
-        ("line", c_int),
-        ("type", c_int),
-        ("op", POINTER(word_desc)),
-        ("left", POINTER('cond_com')),
-        ("right", POINTER('cond_com')),
-    ]
+
+
+# we do this because we need to reference cond_com in cond_com
+cond_com.fields_ = [
+    ("flags", c_int),
+    ("line", c_int),
+    ("type", c_int),
+    ("op", POINTER(word_desc)),
+    ("left", POINTER(cond_com)),
+    ("right", POINTER(cond_com)),
+]
 
 
 class arith_for_com(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n270
     """
-    _fields_ = [
-        ("flags", c_int),
-        ("line", c_int),
-        ("init", POINTER(word_list)),
-        ("test", POINTER(word_list)),
-        ("step", POINTER(word_list)),
-        ("action", POINTER('command'))
-    ]
 
 
 class subshell_com(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n361
     """
-    _fields_ = [
-        ("flags", c_int),
-        ("line", c_int),
-        ("command", POINTER('command'))
-    ]
 
 
 class coproc_com(Structure):
     """
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n382
     """
+
+
+class simple_com(Structure):
+    """
+    https://git.savannah.gnu.org/cgit/bash.git/tree/command.h#n337
+    """
     _fields_ = [
         ("flags", c_int),
-        ("name", c_char_p),
-        ("command", POINTER('command'))
+        ("line", c_int),
+        ("words", POINTER(word_list)),
+        ("redirects", POINTER(redirect))
     ]
 
 
@@ -257,6 +200,96 @@ class command(Structure):
         ("type", c_int),
         ("flags", c_int),
         ("line", c_int),
-        ("redirects", POINTER(redirect))
+        ("redirects", POINTER(redirect)),
         ("value", value)
     ]
+
+
+# we do this because we need to reference command in for_com
+for_com._fields_ = [
+    ("flags", c_int),
+    ("line", c_int),
+    ("name", POINTER(word_desc)),
+    ("map_list", POINTER(word_list)),
+    ("action", POINTER(command))
+]
+
+# we do this because we need to reference pattern_list and command in pattern_list
+pattern_list._fields_ = [
+    ("next", POINTER(pattern_list)),
+    ("patterns", POINTER(word_list)),
+    ("action", POINTER(command)),
+    ("flags", c_int)
+]
+
+# we do this because we need to reference command in while_com
+while_com._fields_ = [
+    ("flags", c_int),
+    ("test", POINTER(command)),
+    ("action", POINTER(command))
+]
+
+# we do this because we need to reference command in if_com
+if_com._fields_ = [
+    ("flags", c_int),
+    ("test", POINTER(command)),
+    ("true_case", POINTER(command)),
+    ("false_case", POINTER(command))
+]
+
+# we do this because we need to reference command in connection
+connection._fields_ = [
+    ("ignore", c_int),
+    ("first", POINTER(command)),
+    ("second", POINTER(command)),
+    ("connector", c_int)
+]
+
+
+# we do this because we need to reference command in group_com
+group_com._fields_ = [
+    ("ignore", c_int),
+    ("command", POINTER(command))
+]
+
+# we do this because we need to reference command in function_def
+function_def._fields_ = [
+    ("flags", c_int),
+    ("line", c_int),
+    ("name", POINTER(word_desc)),
+    ("command", POINTER(command)),
+    ("source_file", c_char_p)
+]
+
+# we do this because we need to reference command in select_com
+select_com._fields_ = [
+    ("flags", c_int),
+    ("line", c_int),
+    ("name", POINTER(word_desc)),
+    ("map_list", POINTER(word_list)),
+    ("action", POINTER(command))
+]
+
+# we do this because we need to reference command in arith_for_com
+arith_for_com._fields_ = [
+    ("flags", c_int),
+    ("line", c_int),
+    ("init", POINTER(word_list)),
+    ("test", POINTER(word_list)),
+    ("step", POINTER(word_list)),
+    ("action", POINTER(command))
+]
+
+# we do this because we need to reference command in subshell_com
+subshell_com._fields_ = [
+    ("flags", c_int),
+    ("line", c_int),
+    ("command", POINTER(command))
+]
+
+# we do this because we need to reference command in coproc_com
+coproc_com._fields_ = [
+    ("flags", c_int),
+    ("name", c_char_p),
+    ("command", POINTER(command))
+]

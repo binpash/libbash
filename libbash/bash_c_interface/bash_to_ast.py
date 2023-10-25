@@ -1,9 +1,11 @@
+from . import ctypes_bash_command as c_bash
+from ..bash_command import Command
 import ctypes
 import os
-from . import Command
-from . import ctypes_bash_command as c_bash
 
-BASH_FILE_PATH = "../bash-5.2/bash.so"
+# current location + ../../bash-5.2/bash.so
+BASH_FILE_PATH = os.path.join(os.path.dirname(
+    __file__), "..", "..", "bash-5.2", "bash.so")
 
 
 def bash_to_ast(bash_file: str) -> list[Command]:
@@ -47,16 +49,22 @@ def bash_to_ast(bash_file: str) -> list[Command]:
     while True:
         # call the function
         read_result: ctypes.c_int = bash.read_command_safe()
-        if read_result < 0:
-            raise Exception("There was an error while parsing the bash script")
+        if read_result != 0:
+            break
 
         # read the global_command variable
         global_command: ctypes.POINTER(c_bash.command) = ctypes.POINTER(
             c_bash.command).in_dll(bash, 'global_command')
 
         # global_command is null
-        if global_command == 0:
-            break
+        if not global_command:
+            eof_reached: ctypes.c_int = ctypes.c_int.in_dll(
+                bash, 'EOF_Reached')
+            if eof_reached:
+                break
+            else:
+                # newline probably
+                continue
 
         # read the command
         command = Command(global_command.contents)
