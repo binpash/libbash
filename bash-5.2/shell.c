@@ -836,9 +836,13 @@ read_and_execute:
 // normally done in main()
 int initialize_shell_libbash(void)
 {
+  set_default_locale();
+
   // should we consider the user's environment?
   if (getenv("POSIXLY_CORRECT") || getenv("POSIX_PEDANTIC"))
     posixly_correct = 1;
+
+  set_shell_name("bash"); // turns out this is important - we replace argv[0] with bash, hopefully this works
 
   init_noninteractive(); // don't think we need to worry about init_interactive
 
@@ -849,6 +853,10 @@ int initialize_shell_libbash(void)
     bind_variable("POSIXLY_CORRECT", "y", 0);
     sv_strict_posix("POSIXLY_CORRECT");
   }
+
+  /* Now we run the shopt_alist and process the options. */
+  if (shopt_alist)
+    run_shopt_alist();
 
   /* From here on in, the shell must be a normal functioning shell.
      Variables from the environment are expected to be set, etc. */
@@ -867,7 +875,20 @@ int initialize_shell_libbash(void)
   cmd_init(); /* initialize the command object caches */
   uwp_init();
 
+  return 0;
+}
+
+// libbash - tells the shell which file to read the commands from
+// returns file descriptor of file on success, negative on failure
+int set_bash_file(char *filename)
+{
+  shell_script_filename = filename;
+  int open_sh = open_shell_script(filename);
+  if (open_sh < 0)
+    return open_sh;
+
   set_bash_input(); // seems neccesary based on comments
+  return 0;
 }
 
 static int
