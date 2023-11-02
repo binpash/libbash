@@ -77,7 +77,7 @@ class Redirect:
     flags: list[OFlag]
     instruction: RInstruction  # the type of redirection
     redirectee: RedirecteeUnion  # the thing being redirected to
-    here_doc_eof: str  # the word that appeared in the << operator?
+    here_doc_eof: Optional[str]  # the word that appeared in the << operator?
 
     def __init__(self, redirect: c_bash.redirect):
         """
@@ -86,7 +86,8 @@ class Redirect:
         self.rflags = redirect_flag_list_from_rflags(redirect.rflags)
         self.flags = oflag_list_from_int(redirect.flags)
         self.instruction = RInstruction(redirect.instruction)
-        self.here_doc_eof = redirect.here_doc_eof.decode('utf-8')
+        self.here_doc_eof = redirect.here_doc_eof.decode(
+            'utf-8') if redirect.here_doc_eof is not None else None
         if RedirectFlag.REDIR_VARASSIGN in self.rflags:
             self.redirector = RedirecteeUnion(
                 None, redirect.redirector.filename.contents)
@@ -110,7 +111,7 @@ class Redirect:
             'flags': self.flags,
             'instruction': self.instruction._to_json(),
             'redirectee': self.redirectee._to_json(),
-            'here_doc_eof': self.here_doc_eof
+            'here_doc_eof': self.here_doc_eof if self.here_doc_eof is not None else None
         }
 
 
@@ -230,20 +231,21 @@ class IfCom:
     flags: list[CommandFlag]
     test: 'Command'  # the thing to test
     true_case: 'Command'  # the action to take if the test is true
-    false_case: 'Command'  # the action to take if the test is false
+    false_case: Optional['Command']  # the action to take if the test is false
 
     def __init__(self, if_c: c_bash.if_com):
         self.flags = command_flag_list_from_int(if_c.flags)
         self.test = Command(if_c.test.contents)
         self.true_case = Command(if_c.true_case.contents)
-        self.false_case = Command(if_c.false_case.contents)
+        self.false_case = Command(
+            if_c.false_case.contents) if if_c.false_case else None
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
             'flags': self.flags,
             'test': self.test._to_json(),
             'true_case': self.true_case._to_json(),
-            'false_case': self.false_case._to_json()
+            'false_case': self.false_case._to_json() if self.false_case is not None else None
         }
 
 
@@ -253,13 +255,14 @@ class Connection:
     """
     ignore: list[CommandFlag]
     first: 'Command'  # the first command to run
-    second: 'Command'  # the second command to run
+    second: Optional['Command']  # the second command to run
     connector: ConnectionType  # the type of connection
 
     def __init__(self, connection: c_bash.connection):
         self.ignore = command_flag_list_from_int(connection.ignore)
         self.first = Command(connection.first.contents)
-        self.second = Command(connection.second.contents)
+        self.second = Command(
+            connection.second.contents) if connection.second else None
         self.connector = ConnectionType(connection.connector)
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
