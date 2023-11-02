@@ -50,7 +50,8 @@ def bash_to_ast(bash_file: str) -> list[Command]:
         # call the function
         read_result: ctypes.c_int = bash.read_command_safe()
         if read_result != 0:
-            break
+            raise Exception(
+                "Bash read command failed, shell script may be invalid")
 
         # read the global_command variable
         global_command: ctypes.POINTER(c_bash.command) = ctypes.POINTER(

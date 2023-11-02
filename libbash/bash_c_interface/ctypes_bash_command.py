@@ -130,7 +130,7 @@ class cond_com(Structure):
 
 
 # we do this because we need to reference cond_com in cond_com
-cond_com.fields_ = [
+cond_com._fields_ = [
     ("flags", c_int),
     ("line", c_int),
     ("type", c_int),

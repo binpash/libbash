@@ -107,8 +107,8 @@ class Redirect:
         """
         return {
             'redirector': self.redirector._to_json(),
-            'rflags': self.rflags,
-            'flags': self.flags,
+            'rflags': [x._to_json() for x in self.rflags],
+            'flags': [x._to_json() for x in self.flags],
             'instruction': self.instruction._to_json(),
             'redirectee': self.redirectee._to_json(),
             'here_doc_eof': self.here_doc_eof if self.here_doc_eof is not None else None
@@ -269,8 +269,8 @@ class Connection:
         return {
             'ignore': [x._to_json() for x in self.ignore],
             'first': self.first._to_json(),
-            'second': self.second._to_json(),
-            'connector': self.connector  # todo: figure out what this int means
+            'second': self.second._to_json() if self.second is not None else None,
+            'connector': self.connector._to_json()  # todo: figure out what this int means
         }
 
 
@@ -311,13 +311,13 @@ class FunctionDef:
     def __init__(self, function: c_bash.function_def):
         self.flags = command_flag_list_from_int(function.flags)
         self.line = function.line
-        self.name = WordDesc(function.name)
+        self.name = WordDesc(function.name.contents)
         self.command = Command(function.command.contents)
         self.source_file = function.source_file if function.source_file is not None else None
 
     def _to_json(self) -> dict[str, Union[int, str, dict, None]]:
         return {
-            'flags': self.flags,
+            'flags': [x._to_json() for x in self.flags],
             'line': self.line,
             'name': self.name._to_json(),
             'command': self.command._to_json(),
@@ -362,7 +362,7 @@ class SelectCom:
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
-            'flags': self.flags,
+            'flags': [x._to_json() for x in self.flags],
             'line': self.line,
             'name': self.name._to_json(),
             'map_list': [x._to_json() for x in self.map_list],
@@ -385,7 +385,7 @@ class ArithCom:
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'flags': self.flags,
+            'flags': [x._to_json() for x in self.flags],
             'line': self.line,
             'exp': [x._to_json() for x in self.exp]
         }
@@ -406,15 +406,15 @@ class CondCom:
         self.flags = command_flag_list_from_int(cond.flags)
         self.line = cond.line
         self.type = CondTypeEnum(cond.type)
-        self.op = WordDesc(cond.op)
+        self.op = WordDesc(cond.op.contents)
         self.left = CondCom(
-            cond.left.contents) if cond.left is not None else None
+            cond.left.contents) if cond.left else None
         self.right = CondCom(
-            cond.right.contents) if cond.right is not None else None
+            cond.right.contents) if cond.right else None
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'flags': self.flags,
+            'flags': [x._to_json() for x in self.flags],
             'line': self.line,
             'cond_type': self.type._to_json(),
             'op': self.op._to_json(),
@@ -468,7 +468,7 @@ class SubshellCom:
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'flags': self.flags,
+            'flags': [x._to_json() for x in self.flags],
             'line': self.line,
             'command': self.command._to_json()
         }
@@ -490,7 +490,7 @@ class CoprocCom:
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
-            'flags': self.flags,
+            'flags': [x._to_json() for x in self.flags],
             'name': self.name,
             'command': self.command._to_json()
         }
