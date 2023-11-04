@@ -133,9 +133,9 @@ THIS_SH = $(BUILD_DIR)/$(Program)
 # with gprof, or nothing (the default).
 PROFILE_FLAGS= @PROFILE_FLAGS@
 
-CFLAGS = @CFLAGS@
+CFLAGS = @CFLAGS@ -fPIC
 CFLAGS_FOR_BUILD = @CFLAGS_FOR_BUILD@ @CROSS_COMPILE@
-CPPFLAGS = @CPPFLAGS@
+CPPFLAGS = @CPPFLAGS@ -fPIC
 CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
 LOCAL_CFLAGS = @LOCAL_CFLAGS@ ${DEBUG} ${MALLOC_DEBUG}
 STYLE_CFLAGS = @STYLE_CFLAGS@
@@ -594,7 +594,7 @@ LOADABLES_DIR = ${top_builddir}/examples/loadables
 # libbash - add shared
 $(Program): $(OBJECTS) $(BUILTINS_DEP) $(LIBDEP) .build
 	$(RM) $@
-	$(PURIFY) $(CC) -fPIC $(BUILTINS_LDFLAGS) $(LIBRARY_LDFLAGS) $(LDFLAGS) -shared -o $(Program) $(OBJECTS) $(LIBS)
+	$(PURIFY) $(CC) $(BUILTINS_LDFLAGS) $(LIBRARY_LDFLAGS) $(LDFLAGS) -shared -o $(Program) $(OBJECTS) $(LIBS)
 	ls -l $(Program)
 	-$(SIZE) $(Program)
 
