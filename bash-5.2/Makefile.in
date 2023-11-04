@@ -594,7 +594,7 @@ LOADABLES_DIR = ${top_builddir}/examples/loadables
 # libbash - add shared
 $(Program): $(OBJECTS) $(BUILTINS_DEP) $(LIBDEP) .build
 	$(RM) $@
-	$(PURIFY) $(CC) $(BUILTINS_LDFLAGS) $(LIBRARY_LDFLAGS) $(LDFLAGS) -shared -o $(Program) $(OBJECTS) $(LIBS)
+	$(PURIFY) $(CC) -fPIC $(BUILTINS_LDFLAGS) $(LIBRARY_LDFLAGS) $(LDFLAGS) -shared -o $(Program) $(OBJECTS) $(LIBS)
 	ls -l $(Program)
 	-$(SIZE) $(Program)
 
