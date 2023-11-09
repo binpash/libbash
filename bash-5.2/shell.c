@@ -895,6 +895,7 @@ int set_bash_file(char *filename)
   // it seems like when multiple calls to bash_to_ast are made in the same process
   // the line number is not reset, so we do it here
   line_number = 0;
+  EOF_Reached = 0; // same for EOF_Reached
 
   shell_script_filename = filename;
   int open_sh = open_shell_script(filename);
