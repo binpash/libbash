@@ -8,11 +8,24 @@ BASH_FILE_PATH = os.path.join(os.path.dirname(
     __file__), "..", "..", "bash-5.2", "bash.so")
 
 
-def bash_to_ast(bash_file: str) -> list[Command]:
+def bash_to_ast(bash_file: str, reconfigure: bool = False) -> list[Command]:
     """
     Extracts the AST from the bash source code.
     Uses ctypes to call an injected bash function that returns the AST.
+
+    :param bash_file: The path to the bash file to parse
+    :param reconfigure: If true, the configure script and make clean all
+    will be called before parsing the bash file. By default this is set to false, but
+    if the bash source hasn't been compiled yet, this flag will be ignored.
     """
+
+    if reconfigure or not os.path.isfile(BASH_FILE_PATH):
+        # run configure and make clean all
+        # this will compile the bash source code into a shared object file
+        # that can be called from python using ctypes
+        os.system("cd " + os.path.dirname(BASH_FILE_PATH) +
+                  " && ./configure && make clean all")
+
     if not os.path.isfile(BASH_FILE_PATH):
         raise Exception("Bash file not found at path: " + BASH_FILE_PATH)
 
