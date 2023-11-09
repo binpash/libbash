@@ -146,7 +146,7 @@ class ForCom:
             'line': self.line,
             'name': self.name._to_json(),
             'map_list': [x._to_json() for x in self.map_list],
-            'action': [x._to_json() for x in self.action]
+            'action': self.action._to_json()
         }
 
 
