@@ -1,1 +1,1 @@
-from libbash import *
+from .libbash import *
