@@ -5234,7 +5234,8 @@ push_heredoc (r)
       need_here_doc = 0;
       report_syntax_error (_("maximum here-document count exceeded"));
       reset_parser ();
-      exit_shell (last_command_exit_value);
+      longjmp (top_level, 1); // libbash
+      // exit_shell (last_command_exit_value);
     }
   redir_stack[need_here_doc++] = r;
 }
