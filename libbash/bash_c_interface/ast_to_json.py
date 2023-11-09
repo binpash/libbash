@@ -1,4 +1,4 @@
-from libbash import Command
+from ..bash_command import Command
 
 
 def ast_to_json(ast: list[Command]) -> list[dict[str, any]]:
