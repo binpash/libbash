@@ -50,7 +50,7 @@ class RedirecteeUnion:
         :param word: the word description or None
         """
         self.dest = dest if dest is not None else None
-        self.filename = WordDesc(filename) if filename is not None else None
+        self.filename = WordDesc(filename) if filename else None
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
@@ -95,7 +95,9 @@ class Redirect:
             self.redirector = RedirecteeUnion(redirect.redirector.dest, None)
         if self.instruction == RInstruction.R_DUPLICATING_INPUT or \
                 self.instruction == RInstruction.R_DUPLICATING_OUTPUT or \
-                self.instruction == RInstruction.R_CLOSE_THIS:
+                self.instruction == RInstruction.R_CLOSE_THIS or \
+                self.instruction == RInstruction.R_MOVE_INPUT or \
+                self.instruction == RInstruction.R_MOVE_OUTPUT:
             self.redirectee = RedirecteeUnion(redirect.redirectee.dest, None)
         else:
             self.redirectee = RedirecteeUnion(
