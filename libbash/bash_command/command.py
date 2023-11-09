@@ -608,14 +608,14 @@ class Command:
     """
     type: CommandType  # command type
     flags: list[CommandFlag]  # command flags
-    line: int  # line number the command is on
+    # line: int  # line number the command is on - seems to be unused
     redirects: list[Redirect]
     value: ValueUnion
 
     def __init__(self, bash_command: c_bash.command):
         self.type = CommandType(bash_command.type)
         self.flags = command_flag_list_from_int(bash_command.flags)
-        self.line = bash_command.line
+        # self.line = bash_command.line
         self.redirects = redirect_list_from_redirect(bash_command.redirects)
         self.value = ValueUnion(self.type, bash_command.value)
 
@@ -623,7 +623,7 @@ class Command:
         return {
             'type': self.type._to_json(),
             'flags': self.flags,
-            'line': self.line,
+            # 'line': self.line,
             'redirects': [x._to_json() for x in self.redirects],
             'value': self.value._to_json()
         }
