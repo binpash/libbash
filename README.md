@@ -10,4 +10,7 @@
 
 This library represents the AST of bash scripts with Python classes. These classes closely mirror structs in the bash-5.2 source code. Below is an explanation of each of these classes.
 
-Coming soon ...
+`Command`: This class represents the top-level command, with the `bash_to_ast` function returning a list of `Command`s. This class contains the following fields:
+
+
+More coming ...
