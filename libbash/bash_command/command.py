@@ -25,6 +25,15 @@ class WordDesc:
             'flags': [x._to_json() for x in self.flags]
         }
 
+    def _to_ctypes(self) -> c_bash.word_desc:
+        """
+        :return: the c word_desc struct representation of this word description
+        """
+        c_word_desc = c_bash.word_desc()
+        c_word_desc.word = self.word.encode('utf-8')
+        c_word_desc.flags = int_from_word_desc_flag_list(self.flags)
+        return c_word_desc
+
 
 def word_desc_list_from_word_list(word_list: ctypes.POINTER(c_bash.word_list)) -> list[WordDesc]:
     """
@@ -36,6 +45,19 @@ def word_desc_list_from_word_list(word_list: ctypes.POINTER(c_bash.word_list)) -
         word_desc_list.append(WordDesc(word_list.contents.word.contents))
         word_list = word_list.contents.next
     return word_desc_list
+
+
+def c_word_list_from_word_desc_list(word_desc_list: list[WordDesc]) -> ctypes.POINTER(c_bash.word_list):
+    """
+    :param word_desc_list: the list of word descriptions
+    :return: a pointer to the first word description in the list
+    """
+    if len(word_desc_list) == 0:
+        return ctypes.POINTER(c_bash.word_list)(None)
+    c_word_list = c_bash.word_list()
+    c_word_list.word = word_desc_list[0]._to_ctypes()
+    c_word_list.next = c_word_list_from_word_desc_list(word_desc_list[1:])
+    return c_word_list
 
 
 class RedirecteeUnion:
@@ -66,6 +88,19 @@ class RedirecteeUnion:
             }
         else:
             raise Exception('invalid redirectee')
+
+    def _to_ctypes(self) -> c_bash.REDIRECTEE:
+        """
+        :return: the c redirectee union struct representation of this redirectee union
+        """
+        c_redirectee = c_bash.REDIRECTEE()
+        if self.dest is not None:
+            c_redirectee.dest = self.dest
+        elif self.filename is not None:
+            c_redirectee.filename = self.filename._to_ctypes()
+        else:
+            raise Exception('invalid redirectee')
+        return c_redirectee
 
 
 class Redirect:
@@ -116,13 +151,67 @@ class Redirect:
             'here_doc_eof': self.here_doc_eof if self.here_doc_eof is not None else None
         }
 
+    def _to_ctypes(self) -> c_bash.redirect:
+        """
+        :return: the c redirect struct representation of this redirect
+        """
+        c_redirect = c_bash.redirect()
+        c_redirect.redirector = c_bash.REDIRECTEE()
+        if self.redirector.dest is not None:
+            c_redirect.redirector.dest = self.redirector.dest
+        elif self.redirector.filename is not None:
+            c_redirect.redirector.filename = self.redirector.filename._to_ctypes()
+        else:
+            raise Exception('invalid redirector')
+        c_redirect.rflags = int_from_redirect_flag_list(self.rflags)
+        c_redirect.flags = int_from_oflag_list(self.flags)
+        c_redirect.instruction = int(self.instruction)
+        c_redirect.redirectee = c_bash.REDIRECTEE()
+        if self.redirectee.dest is not None:
+            c_redirect.redirectee.dest = self.redirectee.dest
+        elif self.redirectee.filename is not None:
+            c_redirect.redirectee.filename = self.redirectee.filename._to_ctypes()
+        else:
+            raise Exception('invalid redirectee')
+        c_redirect.here_doc_eof = self.here_doc_eof.encode(
+            'utf-8') if self.here_doc_eof is not None else None
+        return c_redirect
+
 
 def redirect_list_from_redirect(redirect: ctypes.POINTER(c_bash.redirect)) -> list[Redirect]:
+    """
+    :param redirect: the redirect list
+    :return: a list of redirects
+    """
     redirect_list = []
     while redirect:
         redirect_list.append(Redirect(redirect.contents))
         redirect = redirect.contents.next
     return redirect_list
+
+
+def c_redirect_list_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.POINTER(c_bash.redirect):
+    """
+    :param redirect_list: the list of redirects
+    :return: a pointer to the first redirect in the list
+    """
+    if len(redirect_list) == 0:
+        return ctypes.POINTER(c_bash.redirect)(None)
+    c_redirect = redirect_list[0]._to_ctypes()
+    c_redirect.next = c_redirect_list_from_redirect_list(redirect_list[1:])
+    return c_redirect
+
+
+def c_redirect_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.POINTER(c_bash.redirect):
+    """
+    :param redirect_list: the list of redirects
+    :return: a pointer to the first redirect in the list
+    """
+    if len(redirect_list) == 0:
+        return ctypes.POINTER(c_bash.redirect)(None)
+    c_redirect = redirect_list[0]._to_ctypes()
+    c_redirect.next = c_redirect_from_redirect_list(redirect_list[1:])
+    return c_redirect
 
 
 class ForCom:
@@ -151,6 +240,18 @@ class ForCom:
             'action': self.action._to_json()
         }
 
+    def _to_ctypes(self) -> c_bash.for_com:
+        """
+        :return: the c for_com struct representation of this for command
+        """
+        c_for = c_bash.for_com()
+        c_for.flags = int_from_command_flag_list(self.flags)
+        c_for.line = self.line
+        c_for.name = self.name._to_ctypes()
+        c_for.map_list = c_word_list_from_word_desc_list(self.map_list)
+        c_for.action = self.action._to_ctypes()
+        return c_for
+
 
 class Pattern:
     """
@@ -172,6 +273,16 @@ class Pattern:
             'flags': self.flags
         }
 
+    def _to_ctypes(self) -> c_bash.pattern_list:
+        """
+        :return: the c pattern_list struct representation of this pattern
+        """
+        c_pattern = c_bash.pattern_list()
+        c_pattern.patterns = c_word_list_from_word_desc_list(self.patterns)
+        c_pattern.action = self.action._to_ctypes()
+        c_pattern.flags = int_from_pattern_flag_list(self.flags)
+        return c_pattern
+
 
 def pattern_list_from_pattern_list(pattern: ctypes.POINTER(c_bash.pattern_list)) -> list[Pattern]:
     pattern_list = []
@@ -179,6 +290,14 @@ def pattern_list_from_pattern_list(pattern: ctypes.POINTER(c_bash.pattern_list))
         pattern_list.append(Pattern(pattern.contents))
         pattern = pattern.contents.next
     return pattern_list
+
+
+def c_pattern_list_from_pattern_list(pattern_list: list[Pattern]) -> ctypes.POINTER(c_bash.pattern_list):
+    if len(pattern_list) == 0:
+        return ctypes.POINTER(c_bash.pattern_list)(None)
+    c_pattern = pattern_list[0]._to_ctypes()
+    c_pattern.next = c_pattern_list_from_pattern_list(pattern_list[1:])
+    return c_pattern
 
 
 class CaseCom:
@@ -204,6 +323,17 @@ class CaseCom:
             'clauses': [x._to_json() for x in self.clauses]
         }
 
+    def _to_ctypes(self) -> c_bash.case_com:
+        """
+        :return: the c case_com struct representation of this case command
+        """
+        c_case = c_bash.case_com()
+        c_case.flags = int_from_command_flag_list(self.flags)
+        c_case.line = self.line
+        c_case.word = self.word._to_ctypes()
+        c_case.clauses = c_pattern_list_from_pattern_list(self.clauses)
+        return c_case
+
 
 class WhileCom:
     """
@@ -224,6 +354,16 @@ class WhileCom:
             'test': self.test._to_json(),
             'action': self.action._to_json()
         }
+
+    def _to_ctypes(self) -> c_bash.while_com:
+        """
+        :return: the c while_com struct representation of this while command
+        """
+        c_while = c_bash.while_com()
+        c_while.flags = int_from_command_flag_list(self.flags)
+        c_while.test = self.test._to_ctypes()
+        c_while.action = self.action._to_ctypes()
+        return c_while
 
 
 class IfCom:
@@ -250,6 +390,18 @@ class IfCom:
             'false_case': self.false_case._to_json() if self.false_case is not None else None
         }
 
+    def _to_ctypes(self) -> c_bash.if_com:
+        """
+        :return: the c if_com struct representation of this if command
+        """
+        c_if = c_bash.if_com()
+        c_if.flags = int_from_command_flag_list(self.flags)
+        c_if.test = self.test._to_ctypes()
+        c_if.true_case = self.true_case._to_ctypes()
+        c_if.false_case = self.false_case._to_ctypes(
+        ) if self.false_case is not None else None
+        return c_if
+
 
 class Connection:
     """
@@ -275,6 +427,17 @@ class Connection:
             'connector': self.connector._to_json()  # todo: figure out what this int means
         }
 
+    def _to_ctypes(self) -> c_bash.connection:
+        """
+        :return: the c connection struct representation of this connection
+        """
+        c_connection = c_bash.connection()
+        c_connection.ignore = int_from_command_flag_list(self.ignore)
+        c_connection.first = self.first._to_ctypes()
+        c_connection.second = self.second._to_ctypes() if self.second is not None else None
+        c_connection.connector = int(self.connector)
+        return c_connection
+
 
 class SimpleCom:
     """
@@ -298,6 +461,17 @@ class SimpleCom:
             'words': [x._to_json() for x in self.words],
             'redirects': [x._to_json() for x in self.redirects]
         }
+
+    def _to_ctypes(self) -> c_bash.simple_com:
+        """
+        :return: the c simple_com struct representation of this simple command
+        """
+        c_simple = c_bash.simple_com()
+        c_simple.flags = int_from_command_flag_list(self.flags)
+        c_simple.line = self.line
+        c_simple.words = c_word_list_from_word_desc_list(self.words)
+        c_simple.redirects = c_redirect_list_from_redirect_list(self.redirects)
+        return c_simple
 
 
 class FunctionDef:
@@ -326,6 +500,19 @@ class FunctionDef:
             'source_file': self.source_file if self.source_file is not None else None
         }
 
+    def _to_ctypes(self) -> c_bash.function_def:
+        """
+        :return: the c function_def struct representation of this function definition
+        """
+        c_function = c_bash.function_def()
+        c_function.flags = int_from_command_flag_list(self.flags)
+        c_function.line = self.line
+        c_function.name = self.name._to_ctypes()
+        c_function.command = self.command._to_ctypes()
+        c_function.source_file = self.source_file.encode(
+            'utf-8') if self.source_file is not None else None
+        return c_function
+
 
 class GroupCom:
     """
@@ -343,6 +530,15 @@ class GroupCom:
             'ignore': [x._to_json() for x in self.ignore],
             'command': self.command._to_json()
         }
+
+    def _to_ctypes(self) -> c_bash.group_com:
+        """
+        :return: the c group_com struct representation of this group command
+        """
+        c_group = c_bash.group_com()
+        c_group.ignore = int_from_command_flag_list(self.ignore)
+        c_group.command = self.command._to_ctypes()
+        return c_group
 
 
 class SelectCom:
@@ -371,6 +567,18 @@ class SelectCom:
             'action': self.action._to_json()
         }
 
+    def _to_ctypes(self) -> c_bash.select_com:
+        """
+        :return: the c select_com struct representation of this select command
+        """
+        c_select = c_bash.select_com()
+        c_select.flags = int_from_command_flag_list(self.flags)
+        c_select.line = self.line
+        c_select.name = self.name._to_ctypes()
+        c_select.map_list = c_word_list_from_word_desc_list(self.map_list)
+        c_select.action = self.action._to_ctypes()
+        return c_select
+
 
 class ArithCom:
     """
@@ -391,6 +599,16 @@ class ArithCom:
             'line': self.line,
             'exp': [x._to_json() for x in self.exp]
         }
+
+    def _to_ctypes(self) -> c_bash.arith_com:
+        """
+        :return: the c arith_com struct representation of this arith command
+        """
+        c_arith = c_bash.arith_com()
+        c_arith.flags = int_from_command_flag_list(self.flags)
+        c_arith.line = self.line
+        c_arith.exp = c_word_list_from_word_desc_list(self.exp)
+        return c_arith
 
 
 class CondCom:
@@ -424,6 +642,19 @@ class CondCom:
             'right': self.right._to_json() if self.right is not None else None
         }
 
+    def _to_ctypes(self) -> c_bash.cond_com:
+        """
+        :return: the c cond_com struct representation of this cond command
+        """
+        c_cond = c_bash.cond_com()
+        c_cond.flags = int_from_command_flag_list(self.flags)
+        c_cond.line = self.line
+        c_cond.type = int(self.type)
+        c_cond.op = self.op._to_ctypes()
+        c_cond.left = self.left._to_ctypes() if self.left is not None else None
+        c_cond.right = self.right._to_ctypes() if self.right is not None else None
+        return c_cond
+
 
 class ArithForCom:
     """
@@ -454,6 +685,19 @@ class ArithForCom:
             'action': self.action._to_json()
         }
 
+    def _to_ctypes(self) -> c_bash.arith_for_com:
+        """
+        :return: the c arith_for_com struct representation of this arith_for command
+        """
+        c_arith_for = c_bash.arith_for_com()
+        c_arith_for.flags = int_from_command_flag_list(self.flags)
+        c_arith_for.line = self.line
+        c_arith_for.init = c_word_list_from_word_desc_list(self.init)
+        c_arith_for.test = c_word_list_from_word_desc_list(self.test)
+        c_arith_for.step = c_word_list_from_word_desc_list(self.step)
+        c_arith_for.action = self.action._to_ctypes()
+        return c_arith_for
+
 
 class SubshellCom:
     """
@@ -474,6 +718,16 @@ class SubshellCom:
             'line': self.line,
             'command': self.command._to_json()
         }
+
+    def _to_ctypes(self) -> c_bash.subshell_com:
+        """
+        :return: the c subshell_com struct representation of this subshell command
+        """
+        c_subshell = c_bash.subshell_com()
+        c_subshell.flags = int_from_command_flag_list(self.flags)
+        c_subshell.line = self.line
+        c_subshell.command = self.command._to_ctypes()
+        return c_subshell
 
 
 class CoprocCom:
@@ -496,6 +750,16 @@ class CoprocCom:
             'name': self.name,
             'command': self.command._to_json()
         }
+
+    def _to_ctypes(self) -> c_bash.coproc_com:
+        """
+        :return: the c coproc_com struct representation of this coproc command
+        """
+        c_coproc = c_bash.coproc_com()
+        c_coproc.flags = int_from_command_flag_list(self.flags)
+        c_coproc.name = self.name.encode('utf-8')
+        c_coproc.command = self.command._to_ctypes()
+        return c_coproc
 
 
 class ValueUnion:
@@ -600,6 +864,42 @@ class ValueUnion:
         else:
             raise Exception('invalid value union')
 
+    def _to_ctypes(self) -> c_bash.value:
+        """
+        :return: the c value union struct representation of this value union
+        """
+        c_value = c_bash.value()
+        if self.for_com is not None:
+            c_value.For = self.for_com._to_ctypes()
+        elif self.case_com is not None:
+            c_value.Case = self.case_com._to_ctypes()
+        elif self.while_com is not None:
+            c_value.While = self.while_com._to_ctypes()
+        elif self.if_com is not None:
+            c_value.If = self.if_com._to_ctypes()
+        elif self.connection is not None:
+            c_value.Connection = self.connection._to_ctypes()
+        elif self.simple_com is not None:
+            c_value.Simple = self.simple_com._to_ctypes()
+        elif self.function_def is not None:
+            c_value.Function_def = self.function_def._to_ctypes()
+        elif self.group_com is not None:
+            c_value.Group = self.group_com._to_ctypes()
+        elif self.select_com is not None:
+            c_value.Select = self.select_com._to_ctypes()
+        elif self.arith_com is not None:
+            c_value.Arith = self.arith_com._to_ctypes()
+        elif self.cond_com is not None:
+            c_value.Cond = self.cond_com._to_ctypes()
+        elif self.arith_for_com is not None:
+            c_value.ArithFor = self.arith_for_com._to_ctypes()
+        elif self.subshell_com is not None:
+            c_value.Subshell = self.subshell_com._to_ctypes()
+        elif self.coproc_com is not None:
+            c_value.Coproc = self.coproc_com._to_ctypes()
+        else:
+            raise Exception('invalid value union')
+
 
 class Command:
     """
@@ -627,3 +927,14 @@ class Command:
             'redirects': [x._to_json() for x in self.redirects],
             'value': self.value._to_json()
         }
+
+    def _to_ctypes(self) -> c_bash.command:
+        """
+        :return: the c command struct representation of this command
+        """
+        c_command = c_bash.command()
+        c_command.type = self.type.value
+        c_command.flags = int_from_command_flag_list(self.flags)
+        c_command.line = 0
+        c_command.redirects = c_redirect_from_redirect_list(self.redirects)
+        c_command.value = self.value._to_ctypes()

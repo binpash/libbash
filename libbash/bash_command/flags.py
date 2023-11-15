@@ -41,6 +41,17 @@ def oflag_list_from_int(oflag_int: int) -> list[OFlag]:
     return flag_list
 
 
+def int_from_oflag_list(flag_list: list[OFlag]) -> int:
+    """
+    :param flag_list: the list of open flags
+    :return: the integer value of the open flag
+    """
+    flag_int = 0
+    for flag in flag_list:
+        flag_int |= flag.value
+    return flag_int
+
+
 class WordDescFlag(Enum):
     """
     represents word description flags present in the WordDesc class
@@ -160,6 +171,17 @@ def word_desc_flag_list_from_int(flag_int: int) -> list[WordDescFlag]:
     return flag_list
 
 
+def int_from_word_desc_flag_list(flag_list: list[WordDescFlag]) -> int:
+    """
+    :param flag_list: the list of word description flags
+    :return: the integer value of the word description flag
+    """
+    flag_int = 0
+    for flag in flag_list:
+        flag_int |= flag.value
+    return flag_int
+
+
 class CommandFlag(Enum):
     """
     represents command flags present in several command types
@@ -231,6 +253,17 @@ def command_flag_list_from_int(flag_int: int) -> list[CommandFlag]:
         if flag_int & flag.value:
             flag_list.append(flag)
     return flag_list
+
+
+def int_from_command_flag_list(flag_list: list[CommandFlag]) -> int:
+    """
+    :param flag_list: the list of command flags
+    :return: the integer value of the command flag
+    """
+    flag_int = 0
+    for flag in flag_list:
+        flag_int |= flag.value
+    return flag_int
 
 
 class CommandType(Enum):
@@ -455,6 +488,17 @@ def redirect_flag_list_from_rflags(rflags: int) -> list[RedirectFlag]:
     return flag_list
 
 
+def int_from_redirect_flag_list(flag_list: list[RedirectFlag]) -> int:
+    """
+    :param flag_list: the list of redirect flags
+    :return: the integer value of the redirect flag
+    """
+    flag_int = 0
+    for flag in flag_list:
+        flag_int |= flag.value
+    return flag_int
+
+
 class PatternFlag(Enum):
     CASEPAT_FALLTHROUGH = 1 << 0  # fall through to next pattern
     CASEPAT_TESTNEXT = 1 << 1  # test next pattern
@@ -469,8 +513,23 @@ class PatternFlag(Enum):
 
 
 def pattern_flag_list_from_int(flag_int: int) -> list[PatternFlag]:
+    """
+    :param flag_int: the integer value of the pattern flag
+    :return: a list of pattern flags
+    """
     flag_list = []
     for flag in PatternFlag:
         if flag_int & flag.value:
             flag_list.append(flag)
     return flag_list
+
+
+def int_from_pattern_flag_list(flag_list: list[PatternFlag]) -> int:
+    """
+    :param flag_list: the list of pattern flags
+    :return: the integer value of the pattern flag
+    """
+    flag_int = 0
+    for flag in flag_list:
+        flag_int |= flag.value
+    return flag_int

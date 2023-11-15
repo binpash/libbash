@@ -1,5 +1,6 @@
 from . import ctypes_bash_command as c_bash
 from ..bash_command import Command
+from .api_common import _setup_bash
 import ctypes
 import os
 
@@ -19,30 +20,7 @@ def bash_to_ast(bash_file: str, reconfigure: bool = False) -> list[Command]:
     if the bash source hasn't been compiled yet, this flag will be ignored.
     """
 
-    if reconfigure or not os.path.isfile(BASH_FILE_PATH):
-        # run configure and make clean all
-        # this will compile the bash source code into a shared object file
-        # that can be called from python using ctypes
-        os.system("cd " + os.path.dirname(BASH_FILE_PATH) +
-                  " && ./configure && make clean all")
-
-    if not os.path.isfile(BASH_FILE_PATH):
-        raise Exception("Bash file not found at path: " + BASH_FILE_PATH)
-
-    try:
-        bash = ctypes.CDLL(BASH_FILE_PATH)
-    except OSError:
-        raise Exception(
-            "Bash shared object file not found at path: " + BASH_FILE_PATH)
-
-    # tell python arg types and return type of the initialize_shell_libbash
-    bash.initialize_shell_libbash.argtypes = []
-    bash.initialize_shell_libbash.restype = ctypes.c_int
-
-    # call the function
-    init_result: ctypes.c_int = bash.initialize_shell_libbash()
-    if init_result != 0:
-        raise Exception("Bash initialization failed")
+    bash = _setup_bash(reconfigure)
 
     # tell python arg types and return type of the set_bash_file function
     bash.set_bash_file.argtypes = [ctypes.c_char_p]
