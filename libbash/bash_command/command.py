@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Union, Optional
-from ..bash_c_interface import ctypes_bash_command as c_bash
+from ..c_bash import ctypes_bash_command as c_bash
 import ctypes
 from .flags import *
 

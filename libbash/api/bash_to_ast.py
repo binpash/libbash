@@ -1,4 +1,4 @@
-from . import ctypes_bash_command as c_bash
+from ..c_bash import ctypes_bash_command as c_bash
 from ..bash_command import Command
 from .api_common import _setup_bash
 import ctypes
