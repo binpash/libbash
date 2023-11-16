@@ -53,11 +53,12 @@ def c_word_list_from_word_desc_list(word_desc_list: list[WordDesc]) -> ctypes.PO
     :return: a pointer to the first word description in the list
     """
     if len(word_desc_list) == 0:
-        return ctypes.POINTER(c_bash.word_list)(None)
+        return ctypes.POINTER(c_bash.word_list)()
     c_word_list = c_bash.word_list()
-    c_word_list.word = word_desc_list[0]._to_ctypes()
+    c_word_list.word = ctypes.POINTER(c_bash.word_desc)(
+        word_desc_list[0]._to_ctypes())
     c_word_list.next = c_word_list_from_word_desc_list(word_desc_list[1:])
-    return c_word_list
+    return ctypes.POINTER(c_bash.word_list)(c_word_list)
 
 
 class RedirecteeUnion:
@@ -165,12 +166,13 @@ class Redirect:
             raise Exception('invalid redirector')
         c_redirect.rflags = int_from_redirect_flag_list(self.rflags)
         c_redirect.flags = int_from_oflag_list(self.flags)
-        c_redirect.instruction = int(self.instruction)
+        c_redirect.instruction = self.instruction.value
         c_redirect.redirectee = c_bash.REDIRECTEE()
         if self.redirectee.dest is not None:
             c_redirect.redirectee.dest = self.redirectee.dest
         elif self.redirectee.filename is not None:
-            c_redirect.redirectee.filename = self.redirectee.filename._to_ctypes()
+            c_redirect.redirectee.filename = ctypes.POINTER(
+                c_bash.word_desc)(self.redirectee.filename._to_ctypes())
         else:
             raise Exception('invalid redirectee')
         c_redirect.here_doc_eof = self.here_doc_eof.encode(
@@ -196,10 +198,10 @@ def c_redirect_list_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.
     :return: a pointer to the first redirect in the list
     """
     if len(redirect_list) == 0:
-        return ctypes.POINTER(c_bash.redirect)(None)
+        return ctypes.POINTER(c_bash.redirect)()
     c_redirect = redirect_list[0]._to_ctypes()
     c_redirect.next = c_redirect_list_from_redirect_list(redirect_list[1:])
-    return c_redirect
+    return ctypes.POINTER(c_bash.redirect)(c_redirect)
 
 
 def c_redirect_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.POINTER(c_bash.redirect):
@@ -208,7 +210,7 @@ def c_redirect_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.POINT
     :return: a pointer to the first redirect in the list
     """
     if len(redirect_list) == 0:
-        return ctypes.POINTER(c_bash.redirect)(None)
+        return ctypes.POINTER(c_bash.redirect)()
     c_redirect = redirect_list[0]._to_ctypes()
     c_redirect.next = c_redirect_from_redirect_list(redirect_list[1:])
     return c_redirect
@@ -396,10 +398,11 @@ class IfCom:
         """
         c_if = c_bash.if_com()
         c_if.flags = int_from_command_flag_list(self.flags)
-        c_if.test = self.test._to_ctypes()
-        c_if.true_case = self.true_case._to_ctypes()
-        c_if.false_case = self.false_case._to_ctypes(
-        ) if self.false_case is not None else None
+        c_if.test = ctypes.POINTER(c_bash.command)(self.test._to_ctypes())
+        c_if.true_case = ctypes.POINTER(
+            c_bash.command)(self.true_case._to_ctypes())
+        c_if.false_case = ctypes.POINTER(c_bash.command)(self.false_case._to_ctypes(
+        )) if self.false_case is not None else None
         return c_if
 
 
@@ -433,9 +436,11 @@ class Connection:
         """
         c_connection = c_bash.connection()
         c_connection.ignore = int_from_command_flag_list(self.ignore)
-        c_connection.first = self.first._to_ctypes()
-        c_connection.second = self.second._to_ctypes() if self.second is not None else None
-        c_connection.connector = int(self.connector)
+        c_connection.first = ctypes.POINTER(
+            c_bash.command)(self.first._to_ctypes())
+        c_connection.second = ctypes.POINTER(
+            c_bash.command)(self.second._to_ctypes()) if self.second is not None else None
+        c_connection.connector = self.connector.value
         return c_connection
 
 
@@ -870,35 +875,50 @@ class ValueUnion:
         """
         c_value = c_bash.value()
         if self.for_com is not None:
-            c_value.For = self.for_com._to_ctypes()
+            c_value.For = ctypes.POINTER(c_bash.for_com)(
+                self.for_com._to_ctypes())
         elif self.case_com is not None:
-            c_value.Case = self.case_com._to_ctypes()
+            c_value.Case = ctypes.POINTER(c_bash.case_com)(
+                self.case_com._to_ctypes())
         elif self.while_com is not None:
-            c_value.While = self.while_com._to_ctypes()
+            c_value.While = ctypes.POINTER(c_bash.while_com)(
+                self.while_com._to_ctypes())
         elif self.if_com is not None:
-            c_value.If = self.if_com._to_ctypes()
+            c_value.If = ctypes.POINTER(c_bash.if_com)(
+                self.if_com._to_ctypes())
         elif self.connection is not None:
-            c_value.Connection = self.connection._to_ctypes()
+            c_value.Connection = ctypes.POINTER(
+                c_bash.connection)(self.connection._to_ctypes())
         elif self.simple_com is not None:
-            c_value.Simple = self.simple_com._to_ctypes()
+            c_value.Simple = ctypes.POINTER(c_bash.simple_com)(
+                self.simple_com._to_ctypes())
         elif self.function_def is not None:
-            c_value.Function_def = self.function_def._to_ctypes()
+            c_value.Function_def = ctypes.POINTER(
+                c_bash.function_def)(self.function_def._to_ctypes())
         elif self.group_com is not None:
-            c_value.Group = self.group_com._to_ctypes()
+            c_value.Group = ctypes.POINTER(c_bash.group_com)(
+                self.group_com._to_ctypes())
         elif self.select_com is not None:
-            c_value.Select = self.select_com._to_ctypes()
+            c_value.Select = ctypes.POINTER(c_bash.select_com)(
+                self.select_com._to_ctypes())
         elif self.arith_com is not None:
-            c_value.Arith = self.arith_com._to_ctypes()
+            c_value.Arith = ctypes.POINTER(
+                c_bash.arith_com).arith_com._to_ctypes()
         elif self.cond_com is not None:
-            c_value.Cond = self.cond_com._to_ctypes()
+            c_value.Cond = ctypes.POINTER(c_bash.cond_com)(
+                self.cond_com._to_ctypes())
         elif self.arith_for_com is not None:
-            c_value.ArithFor = self.arith_for_com._to_ctypes()
+            c_value.ArithFor = ctypes.POINTER(c_bash.arith_for_com)(
+                self.arith_for_com._to_ctypes())
         elif self.subshell_com is not None:
-            c_value.Subshell = self.subshell_com._to_ctypes()
+            c_value.Subshell = ctypes.POINTER(c_bash.subshell_com)(
+                self.subshell_com._to_ctypes())
         elif self.coproc_com is not None:
-            c_value.Coproc = self.coproc_com._to_ctypes()
+            c_value.Coproc = ctypes.POINTER(c_bash.coproc_com)(
+                self.coproc_com._to_ctypes())
         else:
             raise Exception('invalid value union')
+        return c_value
 
 
 class Command:
@@ -938,3 +958,4 @@ class Command:
         c_command.line = 0
         c_command.redirects = c_redirect_from_redirect_list(self.redirects)
         c_command.value = self.value._to_ctypes()
+        return c_command
