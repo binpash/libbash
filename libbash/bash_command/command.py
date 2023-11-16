@@ -281,14 +281,15 @@ class Pattern:
         """
         c_pattern = c_bash.pattern_list()
         c_pattern.patterns = c_word_list_from_word_desc_list(self.patterns)
-        c_pattern.action = self.action._to_ctypes()
+        c_pattern.action = ctypes.POINTER(
+            c_bash.command)(self.action._to_ctypes())
         c_pattern.flags = int_from_pattern_flag_list(self.flags)
         return c_pattern
 
 
 def pattern_list_from_pattern_list(pattern: ctypes.POINTER(c_bash.pattern_list)) -> list[Pattern]:
     pattern_list = []
-    while pattern is not None:
+    while pattern:
         pattern_list.append(Pattern(pattern.contents))
         pattern = pattern.contents.next
     return pattern_list
@@ -296,10 +297,10 @@ def pattern_list_from_pattern_list(pattern: ctypes.POINTER(c_bash.pattern_list))
 
 def c_pattern_list_from_pattern_list(pattern_list: list[Pattern]) -> ctypes.POINTER(c_bash.pattern_list):
     if len(pattern_list) == 0:
-        return ctypes.POINTER(c_bash.pattern_list)(None)
+        return ctypes.POINTER(c_bash.pattern_list)()
     c_pattern = pattern_list[0]._to_ctypes()
     c_pattern.next = c_pattern_list_from_pattern_list(pattern_list[1:])
-    return c_pattern
+    return ctypes.POINTER(c_bash.pattern_list)(c_pattern)
 
 
 class CaseCom:
@@ -332,7 +333,7 @@ class CaseCom:
         c_case = c_bash.case_com()
         c_case.flags = int_from_command_flag_list(self.flags)
         c_case.line = self.line
-        c_case.word = self.word._to_ctypes()
+        c_case.word = ctypes.POINTER(c_bash.word_desc)(self.word._to_ctypes())
         c_case.clauses = c_pattern_list_from_pattern_list(self.clauses)
         return c_case
 
@@ -494,7 +495,8 @@ class FunctionDef:
         self.line = function.line
         self.name = WordDesc(function.name.contents)
         self.command = Command(function.command.contents)
-        self.source_file = function.source_file if function.source_file is not None else None
+        self.source_file = function.source_file.decode(
+            'utf-8') if function.source_file is not None else None
 
     def _to_json(self) -> dict[str, Union[int, str, dict, None]]:
         return {
@@ -512,8 +514,10 @@ class FunctionDef:
         c_function = c_bash.function_def()
         c_function.flags = int_from_command_flag_list(self.flags)
         c_function.line = self.line
-        c_function.name = self.name._to_ctypes()
-        c_function.command = self.command._to_ctypes()
+        c_function.name = ctypes.POINTER(
+            c_bash.word_desc)(self.name._to_ctypes())
+        c_function.command = ctypes.POINTER(
+            c_bash.command)(self.command._to_ctypes())
         c_function.source_file = self.source_file.encode(
             'utf-8') if self.source_file is not None else None
         return c_function
@@ -542,7 +546,8 @@ class GroupCom:
         """
         c_group = c_bash.group_com()
         c_group.ignore = int_from_command_flag_list(self.ignore)
-        c_group.command = self.command._to_ctypes()
+        c_group.command = ctypes.POINTER(
+            c_bash.command)(self.command._to_ctypes())
         return c_group
 
 
@@ -654,10 +659,12 @@ class CondCom:
         c_cond = c_bash.cond_com()
         c_cond.flags = int_from_command_flag_list(self.flags)
         c_cond.line = self.line
-        c_cond.type = int(self.type)
-        c_cond.op = self.op._to_ctypes()
-        c_cond.left = self.left._to_ctypes() if self.left is not None else None
-        c_cond.right = self.right._to_ctypes() if self.right is not None else None
+        c_cond.type = self.type.value
+        c_cond.op = ctypes.POINTER(c_bash.word_desc)(self.op._to_ctypes())
+        c_cond.left = ctypes.POINTER(c_bash.cond_com)(
+            self.left._to_ctypes()) if self.left is not None else None
+        c_cond.right = ctypes.POINTER(c_bash.cond_com)(
+            self.right._to_ctypes()) if self.right is not None else None
         return c_cond
 
 
@@ -700,7 +707,8 @@ class ArithForCom:
         c_arith_for.init = c_word_list_from_word_desc_list(self.init)
         c_arith_for.test = c_word_list_from_word_desc_list(self.test)
         c_arith_for.step = c_word_list_from_word_desc_list(self.step)
-        c_arith_for.action = self.action._to_ctypes()
+        c_arith_for.action = ctypes.POINTER(
+            c_bash.command)(self.action._to_ctypes())
         return c_arith_for
 
 
@@ -731,7 +739,8 @@ class SubshellCom:
         c_subshell = c_bash.subshell_com()
         c_subshell.flags = int_from_command_flag_list(self.flags)
         c_subshell.line = self.line
-        c_subshell.command = self.command._to_ctypes()
+        c_subshell.command = ctypes.POINTER(
+            c_bash.command)(self.command._to_ctypes())
         return c_subshell
 
 
@@ -903,7 +912,7 @@ class ValueUnion:
                 self.select_com._to_ctypes())
         elif self.arith_com is not None:
             c_value.Arith = ctypes.POINTER(
-                c_bash.arith_com).arith_com._to_ctypes()
+                c_bash.arith_com)(self.arith_com._to_ctypes())
         elif self.cond_com is not None:
             c_value.Cond = ctypes.POINTER(c_bash.cond_com)(
                 self.cond_com._to_ctypes())
