@@ -1,5 +1,5 @@
 from ..bash_command import *
-from .api_common import _setup_bash
+from .common import _setup_bash
 import ctypes
 
 

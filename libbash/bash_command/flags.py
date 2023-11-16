@@ -9,6 +9,14 @@ class OFlag(Enum):
     O_CREAT = 1 << 9
     O_TRUNC = 1 << 10
 
+    def __eq__(self, other):
+        if isinstance(other, OFlag):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+        else:
+            return False
+
     def _to_json(self) -> str:
         """
         :return: the string representation of the open flag
@@ -90,6 +98,14 @@ class WordDescFlag(Enum):
     W_CHKLOCAL = 1 << 28         # check for local vars on assignment
     # force assignments to be to local variables, non-fatal on assignment errors
     W_FORCELOCAL = 1 << 29
+
+    def __eq__(self, other):
+        if isinstance(other, WordDescFlag):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+        else:
+            return False
 
     def _to_json(self) -> str:
         """
@@ -203,6 +219,14 @@ class CommandFlag(Enum):
     CMD_STD_PATH = 1 << 14  # use default PATH for command lookup
     CMD_TRY_OPTIMIZING = 1 << 15  # try to optimize simple command
 
+    def __eq__(self, other):
+        if isinstance(other, CommandFlag):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+        else:
+            return False
+
     def _to_json(self) -> str:
         """
         :return: the string representation of the command flag
@@ -286,6 +310,14 @@ class CommandType(Enum):
     CM_SUBSHELL = 13  # subshell via ( )
     CM_COPROC = 14  # coprocess
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, CommandType):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+        else:
+            return False
+
     def _to_json(self) -> str:
         """
         :return: the string representation of the command type
@@ -349,6 +381,14 @@ class RInstruction(Enum):
     R_MOVE_OUTPUT_WORD = 18  # 1>&$foo-
     R_APPEND_ERR_AND_OUT = 19  # &>> filename
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, RInstruction):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+        else:
+            return False
+
     def _to_json(self) -> str:
         """
         :return: the string representation of the redirection type
@@ -408,6 +448,14 @@ class CondTypeEnum(Enum):
     COND_TERM = 4
     COND_EXPR = 5
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, CondTypeEnum):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+        else:
+            return False
+
     def _to_json(self) -> str:
         """
         :return: the string representation of the conditional expression type
@@ -441,6 +489,14 @@ class ConnectionType(Enum):
     AND_AND = 288
     OR_OR = 289
 
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, ConnectionType):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+        else:
+            return False
+
     def _to_json(self) -> str:
         """
         :return: the string representation of the connection type
@@ -466,6 +522,14 @@ class RedirectFlag(Enum):
     a redirect flag enum
     """
     REDIR_VARASSIGN = 1 << 0
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, RedirectFlag):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+        else:
+            return False
 
     def _to_json(self) -> str:
         """
@@ -502,6 +566,14 @@ def int_from_redirect_flag_list(flag_list: list[RedirectFlag]) -> int:
 class PatternFlag(Enum):
     CASEPAT_FALLTHROUGH = 1 << 0  # fall through to next pattern
     CASEPAT_TESTNEXT = 1 << 1  # test next pattern
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, PatternFlag):
+            return self.value == other.value
+        elif isinstance(other, int):
+            return self.value == other
+        else:
+            return False
 
     def _to_json(self) -> str:
         if self == PatternFlag.CASEPAT_FALLTHROUGH:

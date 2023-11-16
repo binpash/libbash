@@ -16,6 +16,15 @@ class WordDesc:
         self.word = word.word.decode('utf-8')
         self.flags = word_desc_flag_list_from_int(word.flags)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, WordDesc):
+            return False
+        if self.word != other.word:
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        return True
+
     def _to_json(self) -> dict[str, Union[int, str]]:
         """
         :return: a dictionary representation of the word description
@@ -74,6 +83,15 @@ class RedirecteeUnion:
         """
         self.dest = dest if dest is not None else None
         self.filename = WordDesc(filename) if filename else None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, RedirecteeUnion):
+            return False
+        if self.dest != other.dest:
+            return False
+        if self.filename != other.filename:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
@@ -138,6 +156,23 @@ class Redirect:
         else:
             self.redirectee = RedirecteeUnion(
                 None, redirect.redirectee.filename.contents)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Redirect):
+            return False
+        if set(self.rflags) != set(other.rflags):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.instruction != other.instruction:
+            return False
+        if self.here_doc_eof != other.here_doc_eof:
+            return False
+        if self.redirector != other.redirector:
+            return False
+        if self.redirectee != other.redirectee:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
@@ -233,6 +268,19 @@ class ForCom:
         self.map_list = word_desc_list_from_word_list(for_c.map_list)
         self.action = Command(for_c.action.contents)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ForCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.name != other.name:
+            return False
+        if set(self.map_list) != set(other.map_list):
+            return False
+        if self.action != other.action:
+            return False
+        return True
+
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
             'flags': self.flags,
@@ -267,6 +315,17 @@ class Pattern:
         self.patterns = word_desc_list_from_word_list(pattern.patterns)
         self.action = Command(pattern.action.contents)
         self.flags = pattern_flag_list_from_int(pattern.flags)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Pattern):
+            return False
+        if set(self.patterns) != set(other.patterns):
+            return False
+        if self.action != other.action:
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, dict, list]]:
         return {
@@ -318,6 +377,17 @@ class CaseCom:
         self.word = WordDesc(case_c.word.contents)
         self.clauses = pattern_list_from_pattern_list(case_c.clauses)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, CaseCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.word != other.word:
+            return False
+        if set(self.clauses) != set(other.clauses):
+            return False
+        return True
+
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
             'flags': self.flags,
@@ -350,6 +420,17 @@ class WhileCom:
         self.flags = command_flag_list_from_int(while_c.flags)
         self.test = Command(while_c.test.contents)
         self.action = Command(while_c.action.contents)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, WhileCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.test != other.test:
+            return False
+        if self.action != other.action:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
@@ -384,6 +465,19 @@ class IfCom:
         self.true_case = Command(if_c.true_case.contents)
         self.false_case = Command(
             if_c.false_case.contents) if if_c.false_case else None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, IfCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.test != other.test:
+            return False
+        if self.true_case != other.true_case:
+            return False
+        if self.false_case != other.false_case:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
@@ -423,6 +517,19 @@ class Connection:
             connection.second.contents) if connection.second else None
         self.connector = ConnectionType(connection.connector)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Connection):
+            return False
+        if set(self.ignore) != set(other.ignore):
+            return False
+        if self.first != other.first:
+            return False
+        if self.second != other.second:
+            return False
+        if self.connector != other.connector:
+            return False
+        return True
+
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
             'ignore': [x._to_json() for x in self.ignore],
@@ -460,6 +567,17 @@ class SimpleCom:
         self.words = word_desc_list_from_word_list(simple.words)
         self.redirects = redirect_list_from_redirect(simple.redirects)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SimpleCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if set(self.words) != set(other.words):
+            return False
+        if set(self.redirects) != set(other.redirects):
+            return False
+        return True
+
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
             'flags': [x._to_json() for x in self.flags],
@@ -496,7 +614,20 @@ class FunctionDef:
         self.name = WordDesc(function.name.contents)
         self.command = Command(function.command.contents)
         self.source_file = function.source_file.decode(
-            'utf-8') if function.source_file is not None else None
+            'utf-8') if function.source_file else None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, FunctionDef):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.name != other.name:
+            return False
+        if self.command != other.command:
+            return False
+        if self.source_file != other.source_file:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, None]]:
         return {
@@ -534,6 +665,15 @@ class GroupCom:
         self.ignore = command_flag_list_from_int(group.ignore)
         self.command = Command(group.command.contents)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, GroupCom):
+            return False
+        if set(self.ignore) != set(other.ignore):
+            return False
+        if self.command != other.command:
+            return False
+        return True
+
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
             'ignore': [x._to_json() for x in self.ignore],
@@ -567,6 +707,19 @@ class SelectCom:
         self.name = WordDesc(select.name)
         self.map_list = word_desc_list_from_word_list(select.map_list)
         self.action = Command(select.action.contents)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SelectCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.name != other.name:
+            return False
+        if set(self.map_list) != set(other.map_list):
+            return False
+        if self.action != other.action:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
@@ -602,6 +755,15 @@ class ArithCom:
         self.flags = command_flag_list_from_int(arith.flags)
         self.line = arith.line
         self.exp = word_desc_list_from_word_list(arith.exp)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ArithCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if set(self.exp) != set(other.exp):
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
@@ -641,6 +803,21 @@ class CondCom:
             cond.left.contents) if cond.left else None
         self.right = CondCom(
             cond.right.contents) if cond.right else None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, CondCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.type != other.type:
+            return False
+        if self.op != other.op:
+            return False
+        if self.left != other.left:
+            return False
+        if self.right != other.right:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
@@ -687,6 +864,21 @@ class ArithForCom:
         self.step = word_desc_list_from_word_list(arith_for.step)
         self.action = Command(arith_for.action.contents)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ArithForCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.init != other.init:
+            return False
+        if self.test != other.test:
+            return False
+        if self.step != other.step:
+            return False
+        if self.action != other.action:
+            return False
+        return True
+
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
             'flags': [x._to_json() for x in self.flags],
@@ -725,6 +917,15 @@ class SubshellCom:
         self.line = subshell.line
         self.command = Command(subshell.command.contents)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SubshellCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.command != other.command:
+            return False
+        return True
+
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
             'flags': [x._to_json() for x in self.flags],
@@ -757,6 +958,17 @@ class CoprocCom:
         # c_char_p is a bytes object so we need to decode it
         self.name = coproc.name.decode('utf-8')
         self.command = Command(coproc.command.contents)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, CoprocCom):
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if self.name != other.name:
+            return False
+        if self.command != other.command:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
         return {
@@ -845,6 +1057,39 @@ class ValueUnion:
             self.coproc_com = CoprocCom(value.Coproc.contents)
         else:
             raise Exception('Unknown command type provided.')
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ValueUnion):
+            return False
+        if self.for_com != other.for_com:
+            return False
+        if self.case_com != other.case_com:
+            return False
+        if self.while_com != other.while_com:
+            return False
+        if self.if_com != other.if_com:
+            return False
+        if self.connection != other.connection:
+            return False
+        if self.simple_com != other.simple_com:
+            return False
+        if self.function_def != other.function_def:
+            return False
+        if self.group_com != other.group_com:
+            return False
+        if self.select_com != other.select_com:
+            return False
+        if self.arith_com != other.arith_com:
+            return False
+        if self.cond_com != other.cond_com:
+            return False
+        if self.arith_for_com != other.arith_for_com:
+            return False
+        if self.subshell_com != other.subshell_com:
+            return False
+        if self.coproc_com != other.coproc_com:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, dict]:
         if self.for_com is not None:
@@ -947,6 +1192,19 @@ class Command:
         # self.line = bash_command.line
         self.redirects = redirect_list_from_redirect(bash_command.redirects)
         self.value = ValueUnion(self.type, bash_command.value)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Command):
+            return False
+        if self.type != other.type:
+            return False
+        if set(self.flags) != set(other.flags):
+            return False
+        if set(self.redirects) != set(other.redirects):
+            return False
+        if self.value != other.value:
+            return False
+        return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         return {
