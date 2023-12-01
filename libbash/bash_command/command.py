@@ -3,6 +3,7 @@ from typing import Union, Optional
 from ..c_bash import ctypes_bash_command as c_bash
 import ctypes
 from .flags import *
+from .util import *
 
 
 class WordDesc:
@@ -21,7 +22,7 @@ class WordDesc:
             return False
         if self.word != other.word:
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         return True
 
@@ -160,9 +161,9 @@ class Redirect:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Redirect):
             return False
-        if set(self.rflags) != set(other.rflags):
+        if not list_same_elements(self.rflags, other.rflags):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.instruction != other.instruction:
             return False
@@ -271,11 +272,11 @@ class ForCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ForCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.name != other.name:
             return False
-        if set(self.map_list) != set(other.map_list):
+        if not list_same_elements(self.map_list, other.map_list):
             return False
         if self.action != other.action:
             return False
@@ -319,11 +320,11 @@ class Pattern:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Pattern):
             return False
-        if set(self.patterns) != set(other.patterns):
+        if not list_same_elements(self.patterns, other.patterns):
             return False
         if self.action != other.action:
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         return True
 
@@ -380,11 +381,11 @@ class CaseCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, CaseCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.word != other.word:
             return False
-        if set(self.clauses) != set(other.clauses):
+        if not list_same_elements(self.clauses, other.clauses):
             return False
         return True
 
@@ -424,7 +425,7 @@ class WhileCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, WhileCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.test != other.test:
             return False
@@ -469,7 +470,7 @@ class IfCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, IfCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.test != other.test:
             return False
@@ -520,7 +521,7 @@ class Connection:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Connection):
             return False
-        if set(self.ignore) != set(other.ignore):
+        if not list_same_elements(self.ignore, other.ignore):
             return False
         if self.first != other.first:
             return False
@@ -570,11 +571,11 @@ class SimpleCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SimpleCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
-        if set(self.words) != set(other.words):
+        if not list_same_elements(self.words, other.words):
             return False
-        if set(self.redirects) != set(other.redirects):
+        if not list_same_elements(self.redirects, other.redirects):
             return False
         return True
 
@@ -619,7 +620,7 @@ class FunctionDef:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, FunctionDef):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.name != other.name:
             return False
@@ -668,7 +669,7 @@ class GroupCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, GroupCom):
             return False
-        if set(self.ignore) != set(other.ignore):
+        if not list_same_elements(self.ignore, other.ignore):
             return False
         if self.command != other.command:
             return False
@@ -711,11 +712,11 @@ class SelectCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SelectCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.name != other.name:
             return False
-        if set(self.map_list) != set(other.map_list):
+        if not list_same_elements(self.map_list, other.map_list):
             return False
         if self.action != other.action:
             return False
@@ -759,9 +760,9 @@ class ArithCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ArithCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
-        if set(self.exp) != set(other.exp):
+        if not list_same_elements(self.exp, other.exp):
             return False
         return True
 
@@ -807,7 +808,7 @@ class CondCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, CondCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.type != other.type:
             return False
@@ -867,7 +868,7 @@ class ArithForCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, ArithForCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.init != other.init:
             return False
@@ -920,7 +921,7 @@ class SubshellCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, SubshellCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.command != other.command:
             return False
@@ -962,7 +963,7 @@ class CoprocCom:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, CoprocCom):
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.name != other.name:
             return False
@@ -1198,9 +1199,9 @@ class Command:
             return False
         if self.type != other.type:
             return False
-        if set(self.flags) != set(other.flags):
+        if not list_same_elements(self.flags, other.flags):
             return False
-        if set(self.redirects) != set(other.redirects):
+        if not list_same_elements(self.redirects, other.redirects):
             return False
         if self.value != other.value:
             return False
