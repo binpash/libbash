@@ -31,18 +31,19 @@ def test_bash_to_ast_equality():
     TMP_FILE = "/tmp/libbash/test.sh"
 
     # make a temporary directory to store the bash files
-    os.system(f"rm -rf {TMP_DIR}")
-    os.system(f"mkdir {TMP_DIR}")
+    os.rmdir(TMP_DIR)
+    os.mkdir(TMP_DIR)
     for test_file in get_test_files():
+        print(test_file)
         try:
             ast = bash_to_ast(test_file)
-            print(test_file)
         except Exception as e:
             continue
         bash = ast_to_bash(ast)
-        os.system(f"echo '{bash}' > {TMP_FILE}")
+        with open(TMP_FILE, "w") as f:
+            f.write(bash)
         ast2 = bash_to_ast(f"{TMP_FILE}")
-        os.system(f"rm {TMP_FILE}")
+        os.remove(TMP_FILE)
         assert ast == ast2
 
     os.system(f"rm -rf {TMP_DIR}")
