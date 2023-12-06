@@ -446,8 +446,8 @@ class WhileCom:
         """
         c_while = c_bash.while_com()
         c_while.flags = int_from_command_flag_list(self.flags)
-        c_while.test = self.test._to_ctypes()
-        c_while.action = self.action._to_ctypes()
+        c_while.test = ctypes.POINTER(c_bash.command)(self.test._to_ctypes())
+        c_while.action = ctypes.POINTER(c_bash.command)(self.action._to_ctypes())
         return c_while
 
 

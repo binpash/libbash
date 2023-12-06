@@ -1,5 +1,6 @@
 from ..api import bash_to_ast, ast_to_bash, ast_to_json
 import os
+import shutil
 
 BASH_FILE_PATH = os.path.join(os.path.dirname(
     __file__), "..", "..", "bash-5.2", "bash.so")
@@ -31,10 +32,9 @@ def test_bash_to_ast_equality():
     TMP_FILE = "/tmp/libbash/test.sh"
 
     # make a temporary directory to store the bash files
-    os.rmdir(TMP_DIR)
+    shutil.rmtree(TMP_DIR)
     os.mkdir(TMP_DIR)
     for test_file in get_test_files():
-        print(test_file)
         try:
             ast = bash_to_ast(test_file)
         except Exception as e:
