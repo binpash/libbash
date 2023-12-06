@@ -1,16 +1,48 @@
 # libbash
 
+**NOTE: This repository is still a work in progress, it is not yet functional!**
+
 ## API
 
 `bash_to_ast` takes as input a file containing a bash script and optionally a boolean indicating whether the bash-5.2 source executable doing the parsing should be re-made (by default this is false). It returns a `list` of `Command`s (see AST Classes below) representing the AST of the script. This function will throw an Exception if the script is invalid.
 
 `ast_to_json` takes as input a `list` of `Command`s and returns a list of json-style object's representing the `Command`s (we say that a json-style object is either a `map` from `str` to json-style object or a `str`, `int`, `null`, or `list` of json-style object).
 
+`ast_to_bash` takes as input a list of `Command`s and converts it into the associated Bash script, pretty-printed. This function does not preserve line numbers, spacing, or other stylistic components.
+
+`==` the equality operator has been implemented in the `Command` class. This operator ignores stylistic fields stored in the AST, and considers two `Commands` to be equal if they are structurally equal.
+
+`run_tests` runs a testing suite on the above functions. If this fails, please consider creating a *New Issue* or making a *Pull Request* to fix the bug.
+
 ## Command Objects
 
-This library represents the AST of bash scripts with Python classes. These classes closely mirror structs in the bash-5.2 source code. Below is an explanation of each of these classes.
+This library chooses to represent the AST of a bash script as a list of `Command` objects. To best understand what these objects look like, users are encouraged to understand the classes defined in [this directory](./libbash/bash_command). A great starting place to look at is the [`Command`](./libbash/bash_command/command.py#L1179) class.
 
-`Command`: This class represents the top-level command, with the `bash_to_ast` function returning a list of `Command`s. This class contains the following fields:
+## Limitations
 
+For a Bash parser to be completely correct, it would actually need to execute the entire script! Consider the following script:
 
-More coming ...
+```
+current_hour=$(date +"%H")
+
+if [ "$current_hour" -lt 12 ]; then
+    alias while=random_string
+else
+    echo "It's after noon, no alias will be created."
+fi
+
+counter=1
+while [ $counter -le 5 ]; do
+    echo "Counter: $counter"
+    ((counter++))
+done
+```
+
+Whether `while` is aliased or not depends on the time of day that the script is run, and this affects the functionality of the `while` loop. This is because alias expansion is done 
+*before* parsing in Bash. As this example shows, determining alias expansions is not possible without executing a Bash script. Therefore, one can not expect any uses of `alias` or 
+other programs that change the script before parse-time to be reflected.
+
+## Additional Documents
+
+- [Difficulties Encountered During Development](https://docs.google.com/document/d/1Jn4z_QSTCoth_HvBtGE_DkAR0Z8O4B9eRKOKeV8njas/edit?usp=sharing) (just some notes I took)
+- [Bash Source Code Parsing Outline](https://docs.google.com/document/d/1qZ4OX3BBX7esKu_wB-GmGvgEL5VFEFFTtifKwQdwTDw/edit?usp=sharing) (a brief guide on how parsing works in the Bash source)
