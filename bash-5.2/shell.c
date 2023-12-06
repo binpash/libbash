@@ -897,6 +897,8 @@ int set_bash_file(char *filename)
   line_number = 0;
   EOF_Reached = 0; // same for EOF_Reached
 
+  reset_parser();
+
   shell_script_filename = filename;
   int open_sh = open_shell_script(filename);
   if (open_sh < 0)
