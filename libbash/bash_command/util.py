@@ -6,6 +6,9 @@ def list_same_elements(l1: list, l2: list) -> bool:
     :param l2: The second list
     :return: True if the lists are equal, false otherwise
     """
+    l1 = l1.copy()
+    l2 = l2.copy()
+
     if len(l1) != len(l2):
         return False
     

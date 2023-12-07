@@ -8,6 +8,7 @@ BASH_FILE_PATH = os.path.join(os.path.dirname(
 BASH_TESTS_DIR = os.path.join(os.path.dirname(
     __file__), "..", "..", "bash-5.2", "tests")
 
+NUM_ITERATIONS = 10
 
 def get_test_files() -> list[str]:
     """
@@ -20,34 +21,75 @@ def get_test_files() -> list[str]:
             test_files.append(os.path.join(BASH_TESTS_DIR, file))
     return test_files
 
-
-def test_bash_to_ast_equality():
+def write_to_file(file: str, content: str):
     """
-    This test runs bash_to_ast on every test file in the bash-5.2/tests directory and
-    captures the output. Then, it converts the ast back into bash source code via
-    ast_to_bash and the back via bash_to_ast. The resulting AST is compared to the
-    original AST and if they are not equal, the test fails.
+    Writes the content to the file
+    :param file: The file to write to
+    :param content: The content to write to the file
+    """
+    file_obj = open(file, "w", encoding="utf-8")
+    file_obj.write(content)
+    file_obj.close()
+
+def read_from_file(file: str) -> str:
+    """
+    Reads the content from the file
+    :param file: The file to read from
+    :return: The content of the file
+    """
+    file_obj = open(file, "r", encoding="utf-8")
+    content = file_obj.read()
+    file_obj.close()
+    return content
+
+def test_bash_and_ast_consistency():
+    """
+    This test runs bash_to_ast and ast_to_bash on every test file in the bash-5.2/tests directory 
+    back and forth NUM_ITERATIONS times. On each iteration it makes sure that the AST is the same as the previous iteration.
+    It also makes sure that the bash file is the same as the previous iteration excluding the first iteration.
+    Finally if getting the AST fails, it will make sure that it fails consistently.
     """
     TMP_DIR = "/tmp/libbash"
-    TMP_FILE = "/tmp/libbash/test.sh"
+    TMP_FILE = f"{TMP_DIR}/test.sh"
 
     # make a temporary directory to store the bash files
     shutil.rmtree(TMP_DIR)
     os.mkdir(TMP_DIR)
+
     for test_file in get_test_files():
-        print(test_file)
+        print(f"Testing {test_file}")
+
+        # copy the test file to the temporary file
+        write_to_file(TMP_FILE, read_from_file(test_file))
+
+        valid_script = True
         try:
             ast = bash_to_ast(test_file)
+            bash = ast_to_bash(ast)
         except Exception as e:
-            continue
-        bash = ast_to_bash(ast)
-        with open(TMP_FILE, "w", encoding='utf-8') as f:
-            f.write(bash)
-        ast2 = bash_to_ast(f"{TMP_FILE}")
-        os.remove(TMP_FILE)
-        assert ast == ast2
+            valid_script = False
+        
+        for i in range(NUM_ITERATIONS):
+            if not valid_script:
+                try:
+                    ast = bash_to_ast(test_file)
+                    print("ERROR: bash script parsing is inconsistently failing")
+                    assert False
+                except Exception as e:
+                    continue
 
-    os.system(f"rm -rf {TMP_DIR}")
+            write_to_file(TMP_FILE, bash)
+            ast2 = bash_to_ast(TMP_FILE)
+            bash2 = ast_to_bash(ast2)
+            
+            assert ast == ast2
+            if i != 0:
+                assert bash == bash2
+            
+            ast = ast2
+            bash = bash2
+
+    shutil.rmtree(TMP_DIR)
 
 
 def run_tests():
@@ -55,7 +97,7 @@ def run_tests():
     Runs all the tests in this file
     """
     print("Running tests...")
-    test_bash_to_ast_equality()
-    print("bash_to_ast equality test passed!")
+    test_bash_and_ast_consistency()
+    print("bash_and_ast_consistency test passed!")
     print("All tests passed!")
     
