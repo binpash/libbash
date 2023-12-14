@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Union, Optional
 from ..c_bash import ctypes_bash_command as c_bash
 import ctypes
@@ -47,7 +46,7 @@ class WordDesc:
 
 def word_desc_list_from_word_list(word_list: ctypes.POINTER(c_bash.word_list)) -> list[WordDesc]:
     """
-    :param word: the word list
+    :param word_list: the word list
     :return: a list of word descriptions
     """
     word_desc_list = []
@@ -80,7 +79,7 @@ class RedirecteeUnion:
     def __init__(self, dest: Optional[int], filename: Optional[c_bash.word_desc]):
         """
         :param dest: the destination file descriptor or None
-        :param word: the word description or None
+        :param filename: the word description or None
         """
         self.dest = dest if dest is not None else None
         self.filename = WordDesc(filename) if filename else None
@@ -197,7 +196,7 @@ class Redirect:
         if self.redirector.dest is not None:
             c_redirect.redirector.dest = self.redirector.dest
         elif self.redirector.filename is not None:
-            c_redirect.redirector.filename = self.redirector.filename._to_ctypes()
+            c_redirect.redirector.filename = ctypes.POINTER(c_bash.word_desc)(self.redirector.filename._to_ctypes())
         else:
             raise Exception('invalid redirector')
         c_redirect.rflags = int_from_redirect_flag_list(self.rflags)
@@ -249,7 +248,7 @@ def c_redirect_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.POINT
         return ctypes.POINTER(c_bash.redirect)()
     c_redirect = redirect_list[0]._to_ctypes()
     c_redirect.next = c_redirect_from_redirect_list(redirect_list[1:])
-    return c_redirect
+    return ctypes.POINTER(c_bash.redirect)(c_redirect)
 
 
 class ForCom:
@@ -298,9 +297,9 @@ class ForCom:
         c_for = c_bash.for_com()
         c_for.flags = int_from_command_flag_list(self.flags)
         c_for.line = self.line
-        c_for.name = self.name._to_ctypes()
+        c_for.name = ctypes.POINTER(c_bash.word_desc)(self.name._to_ctypes())
         c_for.map_list = c_word_list_from_word_desc_list(self.map_list)
-        c_for.action = self.action._to_ctypes()
+        c_for.action =  ctypes.POINTER(c_bash.command)(self.action._to_ctypes())
         return c_for
 
 
@@ -985,7 +984,7 @@ class CoprocCom:
         c_coproc = c_bash.coproc_com()
         c_coproc.flags = int_from_command_flag_list(self.flags)
         c_coproc.name = self.name.encode('utf-8')
-        c_coproc.command = self.command._to_ctypes()
+        c_coproc.command = ctypes.POINTER(c_bash.command)(self.command._to_ctypes())
         return c_coproc
 
 
