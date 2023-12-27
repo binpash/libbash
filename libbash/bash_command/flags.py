@@ -2,6 +2,9 @@ from enum import Enum
 
 
 class OFlag(Enum):
+    """
+    represents open flags present in the OpenFlag class
+    """
     O_RDONLY = 0
     O_WRONLY = 1 << 0
     O_RDWR = 1 << 1
@@ -10,6 +13,10 @@ class OFlag(Enum):
     O_TRUNC = 1 << 10
 
     def __eq__(self, other):
+        """
+        :param other: the other OFlag
+        :return: True if the other OFlag is equal to this OFlag
+        """
         if isinstance(other, OFlag):
             return self.value == other.value
         elif isinstance(other, int):
@@ -100,6 +107,10 @@ class WordDescFlag(Enum):
     W_FORCELOCAL = 1 << 29
 
     def __eq__(self, other):
+        """
+        :param other: the other WordDescFlag
+        :return: True if the other WordDescFlag is equal to this WordDescFlag
+        """
         if isinstance(other, WordDescFlag):
             return self.value == other.value
         elif isinstance(other, int):
@@ -220,6 +231,10 @@ class CommandFlag(Enum):
     CMD_TRY_OPTIMIZING = 1 << 15  # try to optimize simple command
 
     def __eq__(self, other):
+        """
+        :param other: the other CommandFlag
+        :return: True if the other CommandFlag is equal to this CommandFlag
+        """
         if isinstance(other, CommandFlag):
             return self.value == other.value
         elif isinstance(other, int):
@@ -311,6 +326,10 @@ class CommandType(Enum):
     CM_COPROC = 14  # coprocess
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other CommandType
+        :return: True if the other CommandType is equal to this CommandType
+        """
         if isinstance(other, CommandType):
             return self.value == other.value
         elif isinstance(other, int):
@@ -382,6 +401,10 @@ class RInstruction(Enum):
     R_APPEND_ERR_AND_OUT = 19  # &>> filename
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other RInstruction
+        :return: True if the other RInstruction is equal to this RInstruction
+        """
         if isinstance(other, RInstruction):
             return self.value == other.value
         elif isinstance(other, int):
@@ -490,6 +513,10 @@ class ConnectionType(Enum):
     OR_OR = 289
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other ConnectionType
+        :return: True if the other ConnectionType is equal to this ConnectionType
+        """
         if isinstance(other, ConnectionType):
             return self.value == other.value
         elif isinstance(other, int):
@@ -564,10 +591,16 @@ def int_from_redirect_flag_list(flag_list: list[RedirectFlag]) -> int:
 
 
 class PatternFlag(Enum):
+    """
+    a pattern flag enum, present in the CasePattern class
+    """
     CASEPAT_FALLTHROUGH = 1 << 0  # fall through to next pattern
     CASEPAT_TESTNEXT = 1 << 1  # test next pattern
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other PatternFlag
+        """
         if isinstance(other, PatternFlag):
             return self.value == other.value
         elif isinstance(other, int):
@@ -576,6 +609,9 @@ class PatternFlag(Enum):
             return False
 
     def _to_json(self) -> str:
+        """
+        :return: the string representation of the pattern flag
+        """
         if self == PatternFlag.CASEPAT_FALLTHROUGH:
             return 'fallthrough'
         elif self == PatternFlag.CASEPAT_TESTNEXT:

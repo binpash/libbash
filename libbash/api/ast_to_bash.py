@@ -20,8 +20,8 @@ def ast_to_bash(ast: list[Command], reconfigure: bool = False) -> str:
 
     bash_str = ""
 
-    for command in ast:
-        command_string = bash.make_command_string(command._to_ctypes())
+    for comm in ast:
+        command_string = bash.make_command_string(comm._to_ctypes())
         bash_str += command_string.decode('utf-8')
         bash_str += "\n"
 

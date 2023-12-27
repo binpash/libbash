@@ -6,6 +6,9 @@ from .util import *
 
 
 class WordDesc:
+    """
+    describes a word
+    """
     word: str
     flags: list[WordDescFlag]
 
@@ -17,6 +20,11 @@ class WordDesc:
         self.flags = word_desc_flag_list_from_int(word.flags)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other word description
+        :return: whether the two word descriptions are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, WordDesc):
             return False
         if self.word != other.word:
@@ -71,6 +79,9 @@ def c_word_list_from_word_desc_list(word_desc_list: list[WordDesc]) -> ctypes.PO
 
 
 class RedirecteeUnion:
+    """
+    a redirectee, either a file descriptor or a file name
+    """
     # use only if R_DUPLICATING_INPUT or R_DUPLICATING_OUTPUT
     dest: Optional[int]
     # use otherwise
@@ -85,6 +96,10 @@ class RedirecteeUnion:
         self.filename = WordDesc(filename) if filename else None
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other redirectee union
+        :return: whether the two redirectee unions are equal
+        """
         if not isinstance(other, RedirecteeUnion):
             return False
         if self.dest != other.dest:
@@ -158,6 +173,11 @@ class Redirect:
                 None, redirect.redirectee.filename.contents)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other redirect struct
+        :return: whether the two redirect structs are equal,
+        the flags lists need not be in the same order
+        """
         if not isinstance(other, Redirect):
             return False
         if not list_same_elements(self.rflags, other.rflags):
@@ -262,6 +282,10 @@ class ForCom:
     action: 'Command'  # the action to take for each word in the map list
 
     def __init__(self, for_c: c_bash.for_com):
+        """
+        :param for_c: the for command struct
+
+        """
         self.flags = command_flag_list_from_int(for_c.flags)
         self.line = for_c.line
         self.name = WordDesc(for_c.name.contents)
@@ -269,6 +293,11 @@ class ForCom:
         self.action = Command(for_c.action.contents)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other for command
+        :return: whether the two for commands are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, ForCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -282,6 +311,9 @@ class ForCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
+        """
+        :return: a dictionary representation of the for command
+        """
         return {
             'flags': self.flags,
             'line': self.line,
@@ -312,11 +344,19 @@ class Pattern:
     flags: list[PatternFlag]
 
     def __init__(self, pattern: c_bash.pattern_list):
+        """
+        :param pattern: the pattern struct
+        """
         self.patterns = word_desc_list_from_word_list(pattern.patterns)
         self.action = Command(pattern.action.contents)
         self.flags = pattern_flag_list_from_int(pattern.flags)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other pattern
+        :return: whether the two patterns are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, Pattern):
             return False
         if not list_same_elements(self.patterns, other.patterns):
@@ -328,6 +368,9 @@ class Pattern:
         return True
 
     def _to_json(self) -> dict[str, Union[int, dict, list]]:
+        """
+        :return: a dictionary representation of the pattern
+        """
         return {
             'patterns': [x._to_json() for x in self.patterns],
             'action': self.action._to_json(),
@@ -347,6 +390,10 @@ class Pattern:
 
 
 def pattern_list_from_pattern_list(pattern: ctypes.POINTER(c_bash.pattern_list)) -> list[Pattern]:
+    """
+    :param pattern: the pattern list, as they are represented in c
+    :return: a list of patterns as they are represented in python
+    """
     pattern_list = []
     while pattern:
         pattern_list.append(Pattern(pattern.contents))
@@ -355,6 +402,10 @@ def pattern_list_from_pattern_list(pattern: ctypes.POINTER(c_bash.pattern_list))
 
 
 def c_pattern_list_from_pattern_list(pattern_list: list[Pattern]) -> ctypes.POINTER(c_bash.pattern_list):
+    """
+    :param pattern_list: the list of patterns, as they are represented in python
+    :return: a pointer to the first pattern in the list, as they are represented in c
+    """
     if len(pattern_list) == 0:
         return ctypes.POINTER(c_bash.pattern_list)()
     c_pattern = pattern_list[0]._to_ctypes()
@@ -372,12 +423,20 @@ class CaseCom:
     clauses: list[Pattern]  # the list of patterns to match against
 
     def __init__(self, case_c: c_bash.case_com):
+        """
+        :param case_c: the case command struct
+        """
         self.flags = command_flag_list_from_int(case_c.flags)
         self.line = case_c.line
         self.word = WordDesc(case_c.word.contents)
         self.clauses = pattern_list_from_pattern_list(case_c.clauses)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other case command
+        :return: whether the two case commands are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, CaseCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -389,6 +448,9 @@ class CaseCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
+        """
+        :return: a dictionary representation of the case command
+        """
         return {
             'flags': self.flags,
             'line': self.line,
@@ -417,11 +479,19 @@ class WhileCom:
     action: 'Command'  # the action to take while the test is true
 
     def __init__(self, while_c: c_bash.while_com):
+        """
+        :param while_c: the while command struct
+        """
         self.flags = command_flag_list_from_int(while_c.flags)
         self.test = Command(while_c.test.contents)
         self.action = Command(while_c.action.contents)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other while command
+        :return: whether the two while commands are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, WhileCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -433,6 +503,9 @@ class WhileCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
+        """
+        :return: a dictionary representation of the while command
+        """
         return {
             'flags': self.flags,
             'test': self.test._to_json(),
@@ -460,6 +533,9 @@ class IfCom:
     false_case: Optional['Command']  # the action to take if the test is false
 
     def __init__(self, if_c: c_bash.if_com):
+        """
+        :param if_c: the if command struct
+        """
         self.flags = command_flag_list_from_int(if_c.flags)
         self.test = Command(if_c.test.contents)
         self.true_case = Command(if_c.true_case.contents)
@@ -467,6 +543,9 @@ class IfCom:
             if_c.false_case.contents) if if_c.false_case else None
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other if command
+        """
         if not isinstance(other, IfCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -480,6 +559,9 @@ class IfCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
+        """
+        :return: a dictionary representation of the if command
+        """
         return {
             'flags': self.flags,
             'test': self.test._to_json(),
@@ -505,22 +587,29 @@ class Connection:
     """
     represents connections
     """
-    ignore: list[CommandFlag]
+    flags: list[CommandFlag]
     first: 'Command'  # the first command to run
     second: Optional['Command']  # the second command to run
     connector: ConnectionType  # the type of connection
 
     def __init__(self, connection: c_bash.connection):
-        self.ignore = command_flag_list_from_int(connection.ignore)
+        """
+        :param connection: the connection struct
+        """
+        self.flags = command_flag_list_from_int(connection.ignore)
         self.first = Command(connection.first.contents)
         self.second = Command(
             connection.second.contents) if connection.second else None
         self.connector = ConnectionType(connection.connector)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other connection
+        :return: whether the two connections are equal
+        """
         if not isinstance(other, Connection):
             return False
-        if not list_same_elements(self.ignore, other.ignore):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.first != other.first:
             return False
@@ -531,8 +620,11 @@ class Connection:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
+        """
+        :return: a dictionary representation of the connection
+        """
         return {
-            'ignore': [x._to_json() for x in self.ignore],
+            'flags': [x._to_json() for x in self.flags],
             'first': self.first._to_json(),
             'second': self.second._to_json() if self.second is not None else None,
             'connector': self.connector._to_json()  # todo: figure out what this int means
@@ -543,7 +635,7 @@ class Connection:
         :return: the c connection struct representation of this connection
         """
         c_connection = c_bash.connection()
-        c_connection.ignore = int_from_command_flag_list(self.ignore)
+        c_connection.ignore = int_from_command_flag_list(self.flags)
         c_connection.first = ctypes.POINTER(
             c_bash.command)(self.first._to_ctypes())
         c_connection.second = ctypes.POINTER(
@@ -562,12 +654,19 @@ class SimpleCom:
     redirects: list[Redirect]  # redirections
 
     def __init__(self, simple: c_bash.simple_com):
+        """
+        :param simple: the simple command struct
+        """
         self.flags = command_flag_list_from_int(simple.flags)
         self.line = simple.line
         self.words = word_desc_list_from_word_list(simple.words)
         self.redirects = redirect_list_from_redirect(simple.redirects)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other simple command
+        :return: whether the two simple commands are equal, the
+        """
         if not isinstance(other, SimpleCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -579,6 +678,9 @@ class SimpleCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
+        """
+        :return: a dictionary representation of the simple command
+        """
         return {
             'flags': [x._to_json() for x in self.flags],
             'line': self.line,
@@ -609,6 +711,9 @@ class FunctionDef:
     source_file: Optional[str]  # the file the function was defined in, if any
 
     def __init__(self, function: c_bash.function_def):
+        """
+        :param function: the function_def struct
+        """
         self.flags = command_flag_list_from_int(function.flags)
         self.line = function.line
         self.name = WordDesc(function.name.contents)
@@ -617,6 +722,11 @@ class FunctionDef:
             'utf-8') if function.source_file else None
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other function definition
+        :return: whether the two function definitions are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, FunctionDef):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -630,6 +740,9 @@ class FunctionDef:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, None]]:
+        """
+        :return: a dictionary representation of the function definition
+        """
         return {
             'flags': [x._to_json() for x in self.flags],
             'line': self.line,
@@ -658,25 +771,35 @@ class GroupCom:
     """
     group commands allow pipes and redirections to be applied to a group of commands
     """
-    ignore: list[CommandFlag]
+    flags: list[CommandFlag]
     command: 'Command'  # the command to run
 
     def __init__(self, group: c_bash.group_com):
-        self.ignore = command_flag_list_from_int(group.ignore)
+        """
+        :param group: the group command struct
+        """
+        self.flags = command_flag_list_from_int(group.ignore)
         self.command = Command(group.command.contents)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other group command
+        :return: whether the two group commands are equal
+        """
         if not isinstance(other, GroupCom):
             return False
-        if not list_same_elements(self.ignore, other.ignore):
+        if not list_same_elements(self.flags, other.flags):
             return False
         if self.command != other.command:
             return False
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
+        """
+        :return: a dictionary representation of the group command
+        """
         return {
-            'ignore': [x._to_json() for x in self.ignore],
+            'line': [x._to_json() for x in self.flags],
             'command': self.command._to_json()
         }
 
@@ -685,7 +808,7 @@ class GroupCom:
         :return: the c group_com struct representation of this group command
         """
         c_group = c_bash.group_com()
-        c_group.ignore = int_from_command_flag_list(self.ignore)
+        c_group.ignore = int_from_command_flag_list(self.flags)
         c_group.command = ctypes.POINTER(
             c_bash.command)(self.command._to_ctypes())
         return c_group
@@ -702,6 +825,9 @@ class SelectCom:
     action: 'Command'  # the action to take for each word in the map list, during execution name is bound to member of map_list
 
     def __init__(self, select: c_bash.select_com):
+        """
+        :param select: the select command struct
+        """
         self.flags = command_flag_list_from_int(select.flags)
         self.line = select.line
         self.name = WordDesc(select.name)
@@ -709,6 +835,11 @@ class SelectCom:
         self.action = Command(select.action.contents)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other select command
+        :return: whether the two select commands are equal, the
+        lists need not be in the same order
+        """
         if not isinstance(other, SelectCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -722,6 +853,9 @@ class SelectCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
+        """
+        :return: a dictionary representation of the select command
+        """
         return {
             'flags': [x._to_json() for x in self.flags],
             'line': self.line,
@@ -752,11 +886,19 @@ class ArithCom:
     exp: list[WordDesc]  # the expression to evaluate
 
     def __init__(self, arith: c_bash.arith_com):
+        """
+        :param arith: the arith command struct
+        """
         self.flags = command_flag_list_from_int(arith.flags)
         self.line = arith.line
         self.exp = word_desc_list_from_word_list(arith.exp)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other arith command
+        :return: whether the two arith commands are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, ArithCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -766,6 +908,9 @@ class ArithCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
+        """
+        :return: a dictionary representation of the arith command
+        """
         return {
             'flags': [x._to_json() for x in self.flags],
             'line': self.line,
@@ -795,6 +940,9 @@ class CondCom:
     right: Optional['CondCom']  # the right side of the expression
 
     def __init__(self, cond: c_bash.cond_com):
+        """
+        :param cond: the cond command struct
+        """
         self.flags = command_flag_list_from_int(cond.flags)
         self.line = cond.line
         self.type = CondTypeEnum(cond.type)
@@ -805,6 +953,11 @@ class CondCom:
             cond.right.contents) if cond.right else None
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other cond command
+        :return: whether the two cond commands are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, CondCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -820,6 +973,9 @@ class CondCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
+        """
+        :return: a dictionary representation of the cond command
+        """
         return {
             'flags': [x._to_json() for x in self.flags],
             'line': self.line,
@@ -857,6 +1013,9 @@ class ArithForCom:
     action: 'Command'  # the action to take for each iteration
 
     def __init__(self, arith_for: c_bash.arith_for_com):
+        """
+        :param arith_for: the arith_for command struct
+        """
         self.flags = command_flag_list_from_int(arith_for.flags)
         self.line = arith_for.line
         self.init = word_desc_list_from_word_list(arith_for.init)
@@ -865,6 +1024,11 @@ class ArithForCom:
         self.action = Command(arith_for.action.contents)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other arith_for command
+        :return: whether the two arith_for commands are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, ArithForCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -880,6 +1044,9 @@ class ArithForCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
+        """
+        :return: a dictionary representation of the arith_for command
+        """
         return {
             'flags': [x._to_json() for x in self.flags],
             'line': self.line,
@@ -913,11 +1080,18 @@ class SubshellCom:
     command: 'Command'  # the command to run in the subshell
 
     def __init__(self, subshell: c_bash.subshell_com):
+        """
+        :param subshell: the subshell command struct
+        """
         self.flags = command_flag_list_from_int(subshell.flags)
         self.line = subshell.line
         self.command = Command(subshell.command.contents)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other subshell command
+        :return: whether the two subshell commands are equal, the
+        """
         if not isinstance(other, SubshellCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -927,6 +1101,9 @@ class SubshellCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
+        """
+        :return: a dictionary representation of the subshell command
+        """
         return {
             'flags': [x._to_json() for x in self.flags],
             'line': self.line,
@@ -954,12 +1131,20 @@ class CoprocCom:
     command: 'Command'  # the command to run in the coprocess
 
     def __init__(self, coproc: c_bash.coproc_com):
+        """
+        :param coproc: the coproc command struct
+        """
         self.flags = command_flag_list_from_int(coproc.flags)
         # c_char_p is a bytes object so we need to decode it
         self.name = coproc.name.decode('utf-8')
         self.command = Command(coproc.command.contents)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other coproc command
+        :return: whether the two coproc commands are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, CoprocCom):
             return False
         if not list_same_elements(self.flags, other.flags):
@@ -971,6 +1156,9 @@ class CoprocCom:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict]]:
+        """
+        :return: a dictionary representation of the coproc command
+        """
         return {
             'flags': [x._to_json() for x in self.flags],
             'name': self.name,
@@ -1012,6 +1200,10 @@ class ValueUnion:
             self,
             command_type: CommandType,
             value: c_bash.value):
+        """
+        :param command_type: the type of command
+        :param value: the value union struct
+        """
         self.for_com = None
         self.case_com = None
         self.while_com = None
@@ -1059,6 +1251,10 @@ class ValueUnion:
             raise Exception('Unknown command type provided.')
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other value union
+        :return: whether the two value unions are equal
+        """
         if not isinstance(other, ValueUnion):
             return False
         if self.for_com != other.for_com:
@@ -1092,6 +1288,9 @@ class ValueUnion:
         return True
 
     def _to_json(self) -> dict[str, dict]:
+        """
+        :return: a dictionary representation of the value union
+        """
         if self.for_com is not None:
             return self.for_com._to_json()
         elif self.case_com is not None:
@@ -1187,6 +1386,9 @@ class Command:
     value: ValueUnion
 
     def __init__(self, bash_command: c_bash.command):
+        """
+        :param bash_command: the command struct
+        """
         self.type = CommandType(bash_command.type)
         self.flags = command_flag_list_from_int(bash_command.flags)
         # self.line = bash_command.line
@@ -1194,6 +1396,11 @@ class Command:
         self.value = ValueUnion(self.type, bash_command.value)
 
     def __eq__(self, other: object) -> bool:
+        """
+        :param other: the other command
+        :return: whether the two commands are equal, the
+        flags lists need not be in the same order
+        """
         if not isinstance(other, Command):
             return False
         if self.type != other.type:
@@ -1207,6 +1414,9 @@ class Command:
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
+        """
+        :return: a dictionary representation of the command
+        """
         return {
             'type': self.type._to_json(),
             'flags': self.flags,
