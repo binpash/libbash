@@ -16,7 +16,7 @@
 
 ## Command Objects
 
-This library chooses to represent the AST of a bash script as a list of `Command` objects. To best understand what these objects look like, users are encouraged to understand the classes defined in [this directory](./libbash/bash_command). A great starting place to look at is the [`Command`](./libbash/bash_command/command.py#L1179) class.
+This library chooses to represent the AST of a bash script as a list of `Command` objects. To best understand what these objects look like, users are encouraged to understand the classes defined in [this directory](./libbash/bash_command). A great starting place to look at is the `Command` class in [command.py](./libbash/bash_command/command.py) class.
 
 ## Limitations
 
