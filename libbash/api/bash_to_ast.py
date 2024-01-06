@@ -19,7 +19,6 @@ def bash_to_ast(bash_file: str, reconfigure: bool = False) -> list[Command]:
     will be called before parsing the bash file. By default this is set to false, but
     if the bash source hasn't been compiled yet, this flag will be ignored.
     """
-
     bash = _setup_bash(reconfigure)
 
     # tell python arg types and return type of the set_bash_file function
@@ -29,11 +28,14 @@ def bash_to_ast(bash_file: str, reconfigure: bool = False) -> list[Command]:
     # call the function
     set_result: ctypes.c_int = bash.set_bash_file(bash_file.encode('utf-8'))
     if set_result < 0:
-        raise Exception("Bash file set failed")
+        raise IOError("Setting bash file failed")
 
     # tell python arg types and return type of the read_command_safe function
     bash.read_command_safe.argtypes = []
     bash.read_command_safe.restype = ctypes.c_int
+
+    # this function closes the file, the function is written by bash, not us
+    bash.unset_bash_input.argtypes = [ctypes.c_int]
 
     command_list: list[Command] = []
 
@@ -41,7 +43,8 @@ def bash_to_ast(bash_file: str, reconfigure: bool = False) -> list[Command]:
         # call the function
         read_result: ctypes.c_int = bash.read_command_safe()
         if read_result != 0:
-            raise Exception(
+            bash.unset_bash_input(0)
+            raise RuntimeError(
                 "Bash read command failed, shell script may be invalid")
 
         # read the global_command variable
@@ -53,6 +56,7 @@ def bash_to_ast(bash_file: str, reconfigure: bool = False) -> list[Command]:
             eof_reached: ctypes.c_int = ctypes.c_int.in_dll(
                 bash, 'EOF_Reached')
             if eof_reached:
+                bash.unset_bash_input(0)
                 break
             else:
                 # newline probably

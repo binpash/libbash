@@ -1,3 +1,5 @@
+import os
+
 from setuptools import setup
 from setuptools.command.build_py import build_py
 from libbash import configure_bash
@@ -6,6 +8,8 @@ class build_libbash(build_py):
     def run(self):
         build_py.run(self)
         configure_bash()
+        os.system("git submodule update --init --recursive")
+
 
 
 setup(name='libbash',

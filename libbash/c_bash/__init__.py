@@ -1,1 +1,1 @@
-from .ctypes_bash_command import *
+from libbash.c_bash.ctypes_bash_command import *

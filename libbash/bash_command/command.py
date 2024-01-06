@@ -340,7 +340,7 @@ class Pattern:
     represents a pattern in a case command
     """
     patterns: list[WordDesc]  # the list of patterns to match against
-    action: 'Command'  # the action to take if the pattern matches
+    action: Optional['Command']  # the action to take if the pattern matches
     flags: list[PatternFlag]
 
     def __init__(self, pattern: c_bash.pattern_list):
@@ -348,7 +348,7 @@ class Pattern:
         :param pattern: the pattern struct
         """
         self.patterns = word_desc_list_from_word_list(pattern.patterns)
-        self.action = Command(pattern.action.contents)
+        self.action = Command(pattern.action.contents) if pattern.action else None
         self.flags = pattern_flag_list_from_int(pattern.flags)
 
     def __eq__(self, other: object) -> bool:
@@ -373,7 +373,7 @@ class Pattern:
         """
         return {
             'patterns': [x._to_json() for x in self.patterns],
-            'action': self.action._to_json(),
+            'action': self.action._to_json() if self.action is not None else None,
             'flags': self.flags
         }
 
@@ -384,7 +384,7 @@ class Pattern:
         c_pattern = c_bash.pattern_list()
         c_pattern.patterns = c_word_list_from_word_desc_list(self.patterns)
         c_pattern.action = ctypes.POINTER(
-            c_bash.command)(self.action._to_ctypes())
+            c_bash.command)(self.action._to_ctypes()) if self.action is not None else None
         c_pattern.flags = int_from_pattern_flag_list(self.flags)
         return c_pattern
 
@@ -830,7 +830,7 @@ class SelectCom:
         """
         self.flags = command_flag_list_from_int(select.flags)
         self.line = select.line
-        self.name = WordDesc(select.name)
+        self.name = WordDesc(select.name.contents)
         self.map_list = word_desc_list_from_word_list(select.map_list)
         self.action = Command(select.action.contents)
 
@@ -871,9 +871,9 @@ class SelectCom:
         c_select = c_bash.select_com()
         c_select.flags = int_from_command_flag_list(self.flags)
         c_select.line = self.line
-        c_select.name = self.name._to_ctypes()
+        c_select.name = ctypes.POINTER(c_bash.word_desc)(self.name._to_ctypes())
         c_select.map_list = c_word_list_from_word_desc_list(self.map_list)
-        c_select.action = self.action._to_ctypes()
+        c_select.action = ctypes.POINTER(c_bash.command)(self.action._to_ctypes())
         return c_select
 
 
