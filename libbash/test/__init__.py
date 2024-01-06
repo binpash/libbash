@@ -1,1 +1,1 @@
-from libbash.test.test import run_tests
+from .test import run_tests

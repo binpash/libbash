@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages, find_namespace_packages
 from setuptools.command.build_py import build_py
 from libbash import configure_bash
 
@@ -11,7 +11,8 @@ class build_libbash(build_py):
         configure_bash()
 
 
-
+find_packages()
+find_namespace_packages()
 setup(name='libbash',
       packages=['libbash'],
       cmdclass={'build_py': build_libbash},
@@ -23,3 +24,4 @@ setup(name='libbash',
       license="GPL-3.0",
       include_package_data=True,
       has_ext_modules=lambda: True)
+
