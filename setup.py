@@ -7,8 +7,8 @@ from libbash import configure_bash
 class build_libbash(build_py):
     def run(self):
         build_py.run(self)
-        configure_bash()
         os.system("git submodule update --init --recursive")
+        configure_bash()
 
 
 
