@@ -1,0 +1,1 @@
+recursive-include libbash/bash-5.2/ *

@@ -1,20 +1,19 @@
 import os
 
-from setuptools import setup, find_packages, find_namespace_packages
+from setuptools import setup
 from setuptools.command.build_py import build_py
-from libbash import configure_bash
+
 
 class build_libbash(build_py):
     def run(self):
         build_py.run(self)
         os.system("git submodule update --init --recursive")
-        configure_bash()
+        os.system("cd " + os.path.join
+                  (os.path.dirname(__file__), "libbash", "bash-5.2") +
+                  " && ./configure && make clean all")
 
-
-find_packages()
-find_namespace_packages()
 setup(name='libbash',
-      packages=['libbash'],
+      packages=['libbash', 'libbash.bash_command'],
       cmdclass={'build_py': build_libbash},
       version='0.1.0',
       description="A Python library for parsing Bash scripts into an AST",

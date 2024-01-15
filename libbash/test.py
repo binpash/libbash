@@ -1,19 +1,20 @@
 import sys
 
-from ..api import bash_to_ast, ast_to_bash
+from libbash.api import bash_to_ast, ast_to_bash, ast_to_json
 import os
 import shutil
 
 # The file path to the bash.so file
-BASH_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-    __file__))), "bash-5.2", "bash.so")
+BASH_FILE_PATH = os.path.join(os.path.dirname(
+    __file__), "bash-5.2", "bash.so")
 
 # The file path to the bash-5.2/tests directory
-BASH_TESTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
-    __file__))), "bash-5.2", "tests")
+BASH_TESTS_DIR = os.path.join(os.path.dirname(
+    __file__), "bash-5.2", "tests")
 
 # The number of iterations to run the bash and ast consistency test
 NUM_ITERATIONS = 10
+
 
 def get_test_files() -> list[str]:
     """

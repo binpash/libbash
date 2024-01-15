@@ -1,5 +1,5 @@
 from typing import Union, Optional
-from ..c_bash import ctypes_bash_command as c_bash
+from .. import ctypes_bash_command as c_bash
 import ctypes
 from .flags import *
 from .util import *
