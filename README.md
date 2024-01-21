@@ -1,6 +1,6 @@
 # libbash
 
-**NOTE: This repository is still a work in progress, it is not yet functional!**
+**NOTE: This project is mostly functional, however there are a few minor bugs with the Bash source code causing issues with our API. Take a look at `test.py` to see which tests we are currently not testing because they will fail!**
 
 ## API
 
