@@ -4,6 +4,8 @@
 
 ## API
 
+*The `libbash` module contains the following functions.*
+
 `bash_to_ast` takes as input a file containing a bash script and optionally a boolean indicating whether the bash-5.2 source executable doing the parsing should be re-made (by default this is false). It returns a `list` of `Command`s (see AST Classes below) representing the AST of the script. This function will throw an Exception if the script is invalid.
 
 `ast_to_json` takes as input a `list` of `Command`s and returns a list of json-style object's representing the `Command`s (we say that a json-style object is either a `map` from `str` to json-style object or a `str`, `int`, `null`, or `list` of json-style object).
@@ -17,6 +19,8 @@
 `run_tests` runs a testing suite on the above functions. If this fails, please consider creating a *New Issue* or making a *Pull Request* to fix the bug.
 
 ## Command Objects
+
+*The `libbash.bash_command` module contains the classes which comprise our representation of a Bash command*
 
 This library chooses to represent the AST of a bash script as a list of `Command` objects. To best understand what these objects look like, users are encouraged to understand the classes defined in [this directory](./libbash/bash_command). A great starting place to look at is the `Command` class in [command.py](./libbash/bash_command/command.py) class.
 
