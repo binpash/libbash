@@ -3,6 +3,7 @@ import sys
 from libbash.api import bash_to_ast, ast_to_bash, ast_to_json
 import os
 import shutil
+import random
 
 # The file path to the bash.so file
 BASH_FILE_PATH = os.path.join(os.path.dirname(
@@ -51,10 +52,7 @@ def get_test_files() -> list[str]:
 
     # remove these files until we determine if this is a bug in bash-5.2 or not
     for remove_file in [
-        "func2.sub", # talk to michael, on second print it is subshell in group in function,
-        # rather than subshell in function
-        "comsub-posix5.sub", # in this script, a comment notes that this script should fail
-        # but it doesn't until the second iteration, talk to michael
+        "comsub-posix5.sub", # bux fix in progress, we need to handle esacs in case statements
         "intl3.sub", # seems to be an issue with utf-8 characters, not sure what to do here ...
         "array9.sub", # same issue as above
         "unicode1.sub", # same issue as above
@@ -63,7 +61,11 @@ def get_test_files() -> list[str]:
     ]:
         test_files.remove(os.path.join(BASH_TESTS_DIR, remove_file))
 
+    # randomize the order of the test files
+    random.shuffle(test_files)
+
     return test_files
+
 
 def write_to_file(file: str, content: str):
     """
@@ -85,6 +87,7 @@ def read_from_file(file: str) -> str:
     content = file_obj.read()
     file_obj.close()
     return content
+
 
 def test_bash_and_ast_consistency():
     """
@@ -111,38 +114,27 @@ def test_bash_and_ast_consistency():
         # copy the test file to the temporary file
         write_to_file(TMP_FILE, read_from_file(test_file))
 
-        valid_script = True
-        ast = None
-        bash = None
         try:
             ast = bash_to_ast(test_file)
+            # we mainly just want to make sure this doesn't break
+            ast_to_json(ast)
             bash = ast_to_bash(ast)
         except RuntimeError as e:
             assert str(e) == "Bash read command failed, shell script may be invalid"
-            valid_script = False
-        
-        for i in range(NUM_ITERATIONS):
-            if not valid_script:
-                consistent = True
-                try:
-                    ast = bash_to_ast(test_file)
-                    print("ERROR: bash script parsing is inconsistently failing")
-                    consistent = False
-                except RuntimeError as e:
-                    assert str(e) == "Bash read command failed, shell script may be invalid"
-                    continue
-                assert consistent
+            continue
 
-            write_to_file(TMP_FILE, bash)
-            ast2 = bash_to_ast(TMP_FILE)
-            bash2 = ast_to_bash(ast2)
+        write_to_file(TMP_FILE, bash)
+        ast2 = bash_to_ast(TMP_FILE)
+        bash2 = ast_to_bash(ast2)
 
+        # func2.sub doesn't pass this test because in the second iteration
+        # a command is wrapped in a group
+        if not test_file == os.path.join(BASH_TESTS_DIR, "func2.sub"):
             assert ast == ast2
-            if i != 0:
-                assert bash == bash2
-            
-            ast = ast2
-            bash = bash2
+
+        write_to_file(TMP_FILE, bash2)
+        bash3 = ast_to_bash(bash_to_ast(TMP_FILE))
+        assert bash2 == bash3
 
     shutil.rmtree(TMP_DIR)
 

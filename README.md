@@ -10,7 +10,7 @@
 
 `ast_to_bash` takes as input a list of `Command`s and converts it into the associated Bash script, pretty-printed. This function does not preserve line numbers, spacing, or other stylistic components.
 
-`==` the equality operator has been implemented in the `Command` class. This operator ignores stylistic fields stored in the AST, and considers two `Commands` to be equal if they are structurally equal.
+`==` the equality operator has been implemented in the `Command` class. This operator ignores stylistic fields stored in the AST, and considers two `Commands` to be equal if they are structurally equal. In most cases, a round-trip from `ast_to_bash` to `bash_to_ast` will result in the same script, but this is not guaranteed. In a few occasional cases, this round trip will wrap certain commands in a `Group` command, which doesn't change the functionality of the script but does change the AST.
 
 `configure_bash` runs the `configure` script and `make clean all` in the bash source directory to create the `bash.so` shared object file that `libbash` uses to convert a script to its AST, and vice versa. If this isn't called explicitly, the first call to any of the main three API calls will do this automatically. However, if this library was downloaded via pip this is done during setup.
 
