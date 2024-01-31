@@ -15,6 +15,7 @@ class build_libbash(build_py):
 setup(name='libbash',
       packages=['libbash', 'libbash.bash_command'],
       cmdclass={'build_py': build_libbash},
+      package_data={'libbash': ['bash-5.2/*']},
       version='0.1.0',
       description="A Python library for parsing Bash scripts into an AST",
       long_description=open('README.md').read(),
