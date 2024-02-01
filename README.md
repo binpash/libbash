@@ -6,15 +6,13 @@
 
 *The `libbash` module contains the following functions.*
 
-`bash_to_ast` takes as input a file containing a bash script and optionally a boolean indicating whether the bash-5.2 source executable doing the parsing should be re-made (by default this is false). It returns a `list` of `Command`s (see AST Classes below) representing the AST of the script. This function will throw an Exception if the script is invalid.
+`bash_to_ast` takes as input a file containing a bash script. It returns a `list` of `Command`s (see AST Classes below) representing the AST of the script. This function will throw an Exception if the script is invalid.
 
 `ast_to_json` takes as input a `list` of `Command`s and returns a list of json-style object's representing the `Command`s (we say that a json-style object is either a `map` from `str` to json-style object or a `str`, `int`, `null`, or `list` of json-style object).
 
 `ast_to_bash` takes as input a list of `Command`s and converts it into the associated Bash script, pretty-printed. This function does not preserve line numbers, spacing, or other stylistic components.
 
 `==` the equality operator has been implemented in the `Command` class. This operator ignores stylistic fields stored in the AST, and considers two `Commands` to be equal if they are structurally equal. In most cases, a round-trip from `ast_to_bash` to `bash_to_ast` will result in the same script, but this is not guaranteed. In a few occasional cases, this round trip will wrap certain commands in a `Group` command, which doesn't change the functionality of the script but does change the AST.
-
-`configure_bash` runs the `configure` script and `make clean all` in the bash source directory to create the `bash.so` shared object file that `libbash` uses to convert a script to its AST, and vice versa. If this isn't called explicitly, the first call to any of the main three API calls will do this automatically. However, if this library was downloaded via pip this is done during setup.
 
 `run_tests` runs a testing suite on the above functions. If this fails, please consider creating a *New Issue* or making a *Pull Request* to fix the bug.
 
