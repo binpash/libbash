@@ -1,17 +1,22 @@
 import os
+import sys
+import subprocess
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
 
 
+def try_exec(*cmds):
+    proc = subprocess.run(cmds)
+
+    if proc.returncode != 0:
+        print('`{}` failed'.format(' '.join(cmds)), file=sys.stderr)
+        proc.check_returncode()
+
 class build_libbash(build_py):
     def run(self):
         build_py.run(self)
-        result = os.system("cd " + os.path.join
-                  (os.path.dirname(__file__), "libbash", "bash-5.2") +
-                  " && ./configure && make clean all")
-        if result != 0:
-            raise Exception("Bash compilation failed")
+        try_exec('cd', 'libbash/bash-5.2', '&&', './configure', '&&', 'make', 'clean', 'all')
 
 setup(name='libbash',
       packages=['libbash', 'libbash.bash_command'],
