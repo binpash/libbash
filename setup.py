@@ -7,10 +7,11 @@ from setuptools.command.build_py import build_py
 class build_libbash(build_py):
     def run(self):
         build_py.run(self)
-        os.system("git submodule update --init --recursive")
-        os.system("cd " + os.path.join
+        result = os.system("cd " + os.path.join
                   (os.path.dirname(__file__), "libbash", "bash-5.2") +
                   " && ./configure && make clean all")
+        if result != 0:
+            raise Exception("Bash compilation failed")
 
 setup(name='libbash',
       packages=['libbash', 'libbash.bash_command'],

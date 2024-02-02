@@ -11,8 +11,10 @@ def _setup_bash() -> ctypes.CDLL:
         # run configure and make clean all
         # this will compile the bash source code into a shared object file
         # that can be called from python using ctypes
-        os.system("cd " + os.path.dirname(BASH_FILE_PATH) +
+        result = os.system("cd " + os.path.dirname(BASH_FILE_PATH) +
                   " && ./configure && make clean all")
+        if result != 0:
+            raise Exception("Bash compilation failed")
 
     if not os.path.isfile(BASH_FILE_PATH):
         raise Exception("Bash file not found at path: " + BASH_FILE_PATH)
