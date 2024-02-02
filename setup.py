@@ -1,6 +1,7 @@
 import os
 import sys
 import subprocess
+import shutil
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
@@ -32,8 +33,10 @@ class build_libbash(build_py):
         build_py.run(self)
 
         with enter_dir('libbash/bash-5.2'):
-            try_exec('configure')
+            try_exec('./configure')
             try_exec('make', 'clean', 'all')
+
+            shutil.copy2('libbash/bash-5.2/bash.so', os.path.join(self.build_lib, 'libbash/bash-5.2/bash.so'))
 
 setup(name='libbash',
       packages=['libbash', 'libbash.bash_command'],
