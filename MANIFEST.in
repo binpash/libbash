@@ -1,2 +1,1 @@
-include libbash/bash-5.2/bash.so
-recursive-include libbash/bash-5.2/tests *
+recursive-include libbash/bash-5.2/ *
