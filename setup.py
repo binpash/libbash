@@ -4,6 +4,8 @@ import subprocess
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
+from contextlib import ContextDecorator
+
 
 
 def try_exec(*cmds):
@@ -13,10 +15,25 @@ def try_exec(*cmds):
         print('`{}` failed'.format(' '.join(cmds)), file=sys.stderr)
         proc.check_returncode()
 
+class enter_dir(ContextDecorator):
+    def __init__(self, path):
+        self.path = path
+        self.old_path = os.getcwd()
+    def __enter__(self):
+        os.chdir(self.path)
+        return self
+
+    def __exit__(self, *exc):
+        os.chdir(self.old_path)
+        return False
+
 class build_libbash(build_py):
     def run(self):
         build_py.run(self)
-        try_exec('cd', 'libbash/bash-5.2', '&&', './configure', '&&', 'make', 'clean', 'all')
+
+        with enter_dir('libbash/bash-5.2'):
+            try_exec('configure')
+            try_exec('make', 'clean', 'all')
 
 setup(name='libbash',
       packages=['libbash', 'libbash.bash_command'],

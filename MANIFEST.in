@@ -1,1 +1,1 @@
-recursive-include libbash/bash-5.2/ *
+graft libbash/bash-5.2
