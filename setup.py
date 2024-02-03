@@ -36,13 +36,12 @@ class build_libbash(build_py):
             try_exec('./configure')
             try_exec('make', 'clean', 'all')
 
-        shutil.copy2('libbash/bash-5.2/bash.so', os.path.join(self.build_lib, 'libbash/bash-5.2/bash.so'))
 
 setup(name='libbash',
       packages=['libbash', 'libbash.bash_command'],
       cmdclass={'build_py': build_libbash},
       package_data={'libbash': ['bash-5.2/*']},
-      version='0.1.2',
+      version='0.1.3',
       description="A Python library for parsing Bash scripts into an AST",
       long_description=open('README.md').read(),
       long_description_content_type='text/markdown',
