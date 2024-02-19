@@ -2,6 +2,8 @@
 
 **NOTE: This project is mostly functional, however there are a few minor bugs with the Bash source code causing issues with our API. Take a look at `test.py` to see which tests we are currently not testing because they will fail!**
 
+`libbash` can be installed via pip: https://pypi.org/project/libbash/ 
+
 ## API
 
 *The `libbash` module contains the following functions.*
