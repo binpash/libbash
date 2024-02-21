@@ -464,12 +464,12 @@ class CondTypeEnum(Enum):
     """
     a conditional expression type enum
     """
-    COND_AND = 0
-    COND_OR = 1
-    COND_UNARY = 2
-    COND_BINARY = 3
-    COND_TERM = 4
-    COND_EXPR = 5
+    COND_AND = 1
+    COND_OR = 2
+    COND_UNARY = 3
+    COND_BINARY = 4
+    COND_TERM = 5
+    COND_EXPR = 6
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, CondTypeEnum):

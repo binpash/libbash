@@ -935,7 +935,7 @@ class CondCom:
     flags: list[CommandFlag]
     line: int  # line number the command is on
     type: CondTypeEnum  # the type of conditional expression
-    op: WordDesc  # binary tree vibe?
+    op: Optional[WordDesc]  # binary tree vibe?
     left: Optional['CondCom']  # the left side of the expression
     right: Optional['CondCom']  # the right side of the expression
 
@@ -946,7 +946,7 @@ class CondCom:
         self.flags = command_flag_list_from_int(cond.flags)
         self.line = cond.line
         self.type = CondTypeEnum(cond.type)
-        self.op = WordDesc(cond.op.contents)
+        self.op = WordDesc(cond.op.contents) if cond.op else None
         self.left = CondCom(
             cond.left.contents) if cond.left else None
         self.right = CondCom(
@@ -980,7 +980,7 @@ class CondCom:
             'flags': [x._to_json() for x in self.flags],
             'line': self.line,
             'cond_type': self.type._to_json(),
-            'op': self.op._to_json(),
+            'op': self.op._to_json() if self.op is not None else None,
             'left': self.left._to_json() if self.left is not None else None,
             'right': self.right._to_json() if self.right is not None else None
         }
@@ -993,7 +993,7 @@ class CondCom:
         c_cond.flags = int_from_command_flag_list(self.flags)
         c_cond.line = self.line
         c_cond.type = self.type.value
-        c_cond.op = ctypes.POINTER(c_bash.word_desc)(self.op._to_ctypes())
+        c_cond.op = ctypes.POINTER(c_bash.word_desc)(self.op._to_ctypes()) if self.op is not None else None
         c_cond.left = ctypes.POINTER(c_bash.cond_com)(
             self.left._to_ctypes()) if self.left is not None else None
         c_cond.right = ctypes.POINTER(c_bash.cond_com)(
@@ -1233,6 +1233,8 @@ class ValueUnion:
             self.simple_com = SimpleCom(value.Simple.contents)
         elif command_type == CommandType.CM_FUNCTION_DEF:
             self.function_def = FunctionDef(value.Function_def.contents)
+        elif command_type == CommandType.CM_UNTIL:
+            self.while_com = WhileCom(value.While.contents)
         elif command_type == CommandType.CM_GROUP:
             self.group_com = GroupCom(value.Group.contents)
         elif command_type == CommandType.CM_SELECT:
