@@ -12,7 +12,7 @@
 
 `ast_to_json` takes as input a `list` of `Command`s and returns a list of json-style object's representing the `Command`s (we say that a json-style object is either a `map` from `str` to json-style object or a `str`, `int`, `null`, or `list` of json-style object).
 
-`ast_to_bash` takes as input a list of `Command`s and converts it into the associated Bash script, pretty-printed. This function does not preserve line numbers, spacing, or other stylistic components.
+`ast_to_bash` takes as input a list of `Command`s and a filename and writes pretty-prints the script to the file. This function does not preserve line numbers, spacing, or other stylistic components.
 
 `==` the equality operator has been implemented in the `Command` class. This operator ignores stylistic fields stored in the AST, and considers two `Commands` to be equal if they are structurally equal. In most cases, a round-trip from `ast_to_bash` to `bash_to_ast` will result in the same script, but this is not guaranteed. In a few occasional cases, this round trip will wrap certain commands in a `Group` command, which doesn't change the functionality of the script but does change the AST.
 
