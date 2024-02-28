@@ -381,7 +381,7 @@ class RInstruction(Enum):
     """
     R_OUTPUT_DIRECTION = 0  # >foo
     R_INPUT_DIRECTION = 1  # <foo
-    R_INPUTA_DIRECTION = 2  # foo & makes this
+    R_INPUTA_DIRECTION = 2  # foo & makes this -- might not be used
     R_APPENDING_TO = 3  # >>foo
     R_READING_UNTIL = 4  # << foo
     R_READING_STRING = 5  # <<< foo

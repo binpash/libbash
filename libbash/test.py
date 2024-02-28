@@ -62,27 +62,18 @@ def get_test_files() -> list[str]:
         "nquote.tests",
         "nquote1.tests",
         "cond.tests",
+        "nquote4.tests",
     ]:
         test_files.remove(os.path.join(BASH_TESTS_DIR, remove_file))
 
     for remove_file in [
-        "comsub-posix5.sub", # bux fix in progress, we need to handle esacs in case statements
+        "comsub-posix5.sub",  # bug report submitted, issue with printing esac in case commands
         "case.tests",
     ]:
         test_files.remove(os.path.join(BASH_TESTS_DIR, remove_file))
 
     for remove_file in [
-        "coproc.tests", # this is an issue with coproc pretty printing bad format
-    ]:
-        test_files.remove(os.path.join(BASH_TESTS_DIR, remove_file))
-
-    for remove_file in [
-        "posixpipe.tests", # basically !! gets removed during pretty print?
-    ]:
-        test_files.remove(os.path.join(BASH_TESTS_DIR, remove_file))
-
-    for remove_file in [
-        "nquote4.tests", # we need to figure out how to decode certain bytes
+        "coproc.tests", # this is an issue with coproc pretty printing bad format, bug report submitted
     ]:
         test_files.remove(os.path.join(BASH_TESTS_DIR, remove_file))
 
@@ -92,23 +83,23 @@ def get_test_files() -> list[str]:
     return test_files
 
 
-def write_to_file(file: str, content: str):
+def write_to_file(file: str, content: bytes):
     """
     Writes the content to the file
     :param file: The file to write to
-    :param content: The content to write to the file
+    :param content: The content to write to the file as bytes
     """
-    file_obj = open(file, "w", encoding="utf-8")
+    file_obj = open(file, "wb")
     file_obj.write(content)
     file_obj.close()
 
-def read_from_file(file: str) -> str:
+def read_from_file(file: str) -> bytes:
     """
     Reads the content from the file
     :param file: The file to read from
-    :return: The content of the file
+    :return: The content of the file as bytes
     """
-    file_obj = open(file, "r", encoding="utf-8")
+    file_obj = open(file, "rb",)
     content = file_obj.read()
     file_obj.close()
     return content
@@ -143,23 +134,34 @@ def test_bash_and_ast_consistency():
             ast = bash_to_ast(test_file)
             # we mainly just want to make sure this doesn't break
             ast_to_json(ast)
-            bash = ast_to_bash(ast)
+            ast_to_bash(ast, TMP_FILE)
+            bash = read_from_file(TMP_FILE)
         except RuntimeError as e:
             assert str(e) == "Bash read command failed, shell script may be invalid"
             continue
 
-        write_to_file(TMP_FILE, bash)
         ast2 = bash_to_ast(TMP_FILE)
-        bash2 = ast_to_bash(ast2)
-
-        assert bash == bash2
+        ast_to_bash(ast2, TMP_FILE)
+        bash2 = read_from_file(TMP_FILE)
 
         # func2.sub doesn't pass this test because in the second iteration
         # a command is wrapped in a group
-        if not test_file == os.path.join(BASH_TESTS_DIR, "func2.sub"):
+        # see below for posixpipe.tests
+        if not test_file == os.path.join(BASH_TESTS_DIR, "func2.sub") \
+            and not test_file == os.path.join(BASH_TESTS_DIR, "posixpipe.tests"):
             assert ast == ast2
 
-
+        # posixpipe.tests has ! ! which is equivalent to an empty command
+        # so on the second iteration the command is replaced with a blank line
+        # on the third iteration the blank line is deleted so we must compare
+        # the third and fourth iterations for equivalence
+        if not test_file == os.path.join(BASH_TESTS_DIR, "posixpipe.tests"):
+            assert bash == bash2
+        else:
+            ast3 = bash_to_ast(TMP_FILE)
+            ast_to_bash(ast3, TMP_FILE)
+            bash3 = read_from_file(TMP_FILE)
+            assert bash2 == bash3
 
     shutil.rmtree(TMP_DIR)
 

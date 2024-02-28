@@ -37,7 +37,7 @@ def _setup_bash() -> ctypes.CDLL:
     return bash
 
 
-def ast_to_bash(ast: list[Command]) -> str:
+def ast_to_bash(ast: list[Command], write_to: str):
     """
     Converts the AST of a bash script back into the bash source code.
     :param ast: The AST of the bash script
@@ -51,14 +51,16 @@ def ast_to_bash(ast: list[Command]) -> str:
     bash.make_command_string.argtypes = [ctypes.POINTER(c_bash.command)]
     bash.make_command_string.restype = ctypes.c_char_p
 
-    bash_str = ""
+    bash_str = bytes()
 
     for comm in ast:
         command_string = bash.make_command_string(comm._to_ctypes())
-        bash_str += command_string.decode('utf-8')
-        bash_str += "\n"
+        bash_str += command_string
+        bash_str += "\n".encode('utf-8')
 
-    return bash_str
+    with open(write_to, "wb") as f:
+        # don't decode the bytes, just write them to the file
+        f.write(bash_str)
 
 def ast_to_json(ast: list[Command]) -> list[dict[str, any]]:
     """

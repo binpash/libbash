@@ -9,14 +9,14 @@ class WordDesc:
     """
     describes a word
     """
-    word: str
+    word: bytes # the word
     flags: list[WordDescFlag]
 
     def __init__(self, word: c_bash.word_desc):
         """
         :param word: the word description
         """
-        self.word = word.word.decode('utf-8')
+        self.word = word.word
         self.flags = word_desc_flag_list_from_int(word.flags)
 
     def __eq__(self, other: object) -> bool:
@@ -38,7 +38,7 @@ class WordDesc:
         :return: a dictionary representation of the word description
         """
         return {
-            'word': self.word,
+            'word': self.word.decode('utf-8', errors='replace'),
             'flags': [x._to_json() for x in self.flags]
         }
 
@@ -47,7 +47,7 @@ class WordDesc:
         :return: the c word_desc struct representation of this word description
         """
         c_word_desc = c_bash.word_desc()
-        c_word_desc.word = self.word.encode('utf-8')
+        c_word_desc.word = self.word
         c_word_desc.flags = int_from_word_desc_flag_list(self.flags)
         return c_word_desc
 
