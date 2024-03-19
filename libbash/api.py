@@ -72,7 +72,7 @@ def ast_to_json(ast: list[Command]) -> list[dict[str, any]]:
 
 
 def bash_to_ast(bash_file: str, with_linno_info: bool=False) -> \
-        [list[Command], list[Command, str, int, int]]:
+        [list[Command], list[Command, bytes, int, int]]:
     """
     Extracts the AST from the bash source code.
     Uses ctypes to call an injected bash function that returns the AST.
@@ -103,7 +103,7 @@ def bash_to_ast(bash_file: str, with_linno_info: bool=False) -> \
 
     command_list = []
 
-    with open(bash_file, "r") as f:
+    with open(bash_file, "rb") as f:
         lines = f.readlines()
 
     while True:
@@ -136,7 +136,7 @@ def bash_to_ast(bash_file: str, with_linno_info: bool=False) -> \
 
         # add the command to the list
         if with_linno_info:
-            command_string = "".join(lines[linno_before:linno_after])
+            command_string = b''.join(lines[linno_before:linno_after])
             command_list.append((command, command_string, linno_before, linno_after))
         else:
             command_list.append(command)
