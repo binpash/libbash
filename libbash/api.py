@@ -71,7 +71,8 @@ def ast_to_json(ast: list[Command]) -> list[dict[str, any]]:
     return [command._to_json() for command in ast]
 
 
-def bash_to_ast(bash_file: str) -> list[Command]:
+def bash_to_ast(bash_file: str, with_linno_info: bool=False) -> \
+        [list[Command], list[Command, str, int, int]]:
     """
     Extracts the AST from the bash source code.
     Uses ctypes to call an injected bash function that returns the AST.
@@ -79,6 +80,8 @@ def bash_to_ast(bash_file: str) -> list[Command]:
     :param bash_file: The path to the bash file to parse
     will be called before parsing the bash file. By default this is set to false, but
     if the bash source hasn't been compiled yet, this flag will be ignored.
+    :param with_linno_info: If true, the line numbers of the commands will be returned
+    :return: The AST of the bash script
     """
     bash = _setup_bash()
 
@@ -98,11 +101,16 @@ def bash_to_ast(bash_file: str) -> list[Command]:
     # this function closes the file, the function is written by bash, not us
     bash.unset_bash_input.argtypes = [ctypes.c_int]
 
-    command_list: list[Command] = []
+    command_list = []
+
+    with open(bash_file, "r") as f:
+        lines = f.readlines()
 
     while True:
         # call the function
+        linno_before: int = ctypes.c_int.in_dll(bash, 'line_number').value
         read_result: ctypes.c_int = bash.read_command_safe()
+        linno_after: int = ctypes.c_int.in_dll(bash, 'line_number').value
         if read_result != 0:
             bash.unset_bash_input(0)
             raise RuntimeError(
@@ -127,6 +135,10 @@ def bash_to_ast(bash_file: str) -> list[Command]:
         command = Command(global_command.contents)
 
         # add the command to the list
-        command_list.append(command)
+        if with_linno_info:
+            command_string = "".join(lines[linno_before:linno_after])
+            command_list.append((command, command_string, linno_before, linno_after))
+        else:
+            command_list.append(command)
 
     return command_list
