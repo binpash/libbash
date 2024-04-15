@@ -36,12 +36,11 @@ class build_libbash(build_py):
             try_exec('./configure')
             try_exec('make', 'clean', 'all')
 
-
 setup(name='libbash',
       packages=['libbash', 'libbash.bash_command'],
       cmdclass={'build_py': build_libbash},
-      package_data={'libbash': ['bash-5.2/*']},
-      include_package_date=True,
+      package_data={'': ['libbash/bash-5.2']},
+      include_package_data=True,
       version='0.1.11',
       description="A Python library for parsing Bash scripts into an AST",
       long_description=open('README.md').read(),
