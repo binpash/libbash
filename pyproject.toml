@@ -1,6 +1,6 @@
 [project]
 name = "libbash"
-version = "0.1.11"
+version = "0.1.12"
 authors = [
   { name="Seth Sabar", email="sethsabar@gmail.com" },
 ]
