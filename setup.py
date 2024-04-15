@@ -40,7 +40,7 @@ class build_libbash(build_py):
 setup(name='libbash',
       packages=['libbash', 'libbash.bash_command'],
       cmdclass={'build_py': build_libbash},
-      package_data={'libbash': ['bash-5.2/*']},
+      package_data={'libbash': ['libbash/bash-5.2/*']},
       include_package_date=True,
       version='0.1.11',
       description="A Python library for parsing Bash scripts into an AST",
