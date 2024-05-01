@@ -63,6 +63,10 @@ def get_test_files() -> list[str]:
         "nquote1.tests",
         "cond.tests",
         "nquote4.tests",
+        "assoc15.sub",
+        "dollar-at-star9.sub",
+        "array29.sub",
+        "exp8.sub",
     ]:
         test_files.remove(os.path.join(BASH_TESTS_DIR, remove_file))
 

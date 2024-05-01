@@ -735,8 +735,9 @@ class FunctionDef:
             return False
         if self.command != other.command:
             return False
-        if self.source_file != other.source_file:
-            return False
+        # if the asts are coming from different files, they should still be considered equal
+        # if self.source_file != other.source_file:
+        #     return False
         return True
 
     def _to_json(self) -> dict[str, Union[int, str, dict, None]]:
