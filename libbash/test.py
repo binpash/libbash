@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from __future__ import annotations
 
 import sys
@@ -181,4 +183,6 @@ def run_tests():
     print("Running tests...")
     test_bash_and_ast_consistency()
     print("All tests passed!")
-    
+
+if __name__ == "__main__":
+    run_tests()
