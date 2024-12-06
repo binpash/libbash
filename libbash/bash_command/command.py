@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Union, Optional
 from .. import ctypes_bash_command as c_bash
 import ctypes

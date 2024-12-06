@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 
 from libbash.api import bash_to_ast, ast_to_bash, ast_to_json

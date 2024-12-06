@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from .bash_command import *
 import ctypes
 import os
