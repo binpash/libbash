@@ -1,0 +1,42 @@
+name: Test
+on:
+  pull_request_target:
+    types: [assigned, opened, synchronize, reopened, ready_for_review]
+    paths:
+        - libbash/**
+  push:
+    branches:
+      - main
+    paths:
+      - libbash/**
+jobs:
+  LibBash-Test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Running Tests
+        run: |
+          python3 -m venv venv
+          . venv/bin/activate
+          ./setup_test.sh
+
+          ./test.py | tee python.log
+          test_succ=$?
+
+          # TODO: Is this working?
+          timer="$(LANG=en_us_88591; date)"
+          echo "VERSION<<EOF" >> "$GITHUB_ENV"
+          echo "OS:${{matrix.os}}" >> "$GITHUB_ENV"
+          echo "$timer" >> "$GITHUB_ENV"
+          cat python.log >> "$GITHUB_ENV"
+          echo 'EOF' >> "$GITHUB_ENV"
+
+          exit $test_succ
