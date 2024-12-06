@@ -11,7 +11,8 @@ class WordDesc:
     """
     describes a word
     """
-    word: bytes # the word
+
+    word: bytes  # the word
     flags: list[WordDescFlag]
 
     def __init__(self, word: c_bash.word_desc):
@@ -40,8 +41,8 @@ class WordDesc:
         :return: a dictionary representation of the word description
         """
         return {
-            'word': self.word.decode('utf-8', errors='replace'),
-            'flags': [x._to_json() for x in self.flags]
+            "word": self.word.decode("utf-8", errors="replace"),
+            "flags": [x._to_json() for x in self.flags],
         }
 
     def _to_ctypes(self) -> c_bash.word_desc:
@@ -54,7 +55,9 @@ class WordDesc:
         return c_word_desc
 
 
-def word_desc_list_from_word_list(word_list: ctypes._Pointer[c_bash.word_list]) -> list[WordDesc]:
+def word_desc_list_from_word_list(
+    word_list: ctypes._Pointer[c_bash.word_list],
+) -> list[WordDesc]:
     """
     :param word_list: the word list
     :return: a list of word descriptions
@@ -66,7 +69,9 @@ def word_desc_list_from_word_list(word_list: ctypes._Pointer[c_bash.word_list]) 
     return word_desc_list
 
 
-def c_word_list_from_word_desc_list(word_desc_list: list[WordDesc]) -> ctypes._Pointer[c_bash.word_list]:
+def c_word_list_from_word_desc_list(
+    word_desc_list: list[WordDesc],
+) -> ctypes._Pointer[c_bash.word_list]:
     """
     :param word_desc_list: the list of word descriptions
     :return: a pointer to the first word description in the list
@@ -74,8 +79,7 @@ def c_word_list_from_word_desc_list(word_desc_list: list[WordDesc]) -> ctypes._P
     if len(word_desc_list) == 0:
         return ctypes.POINTER(c_bash.word_list)()
     c_word_list = c_bash.word_list()
-    c_word_list.word = ctypes.POINTER(c_bash.word_desc)(
-        word_desc_list[0]._to_ctypes())
+    c_word_list.word = ctypes.POINTER(c_bash.word_desc)(word_desc_list[0]._to_ctypes())
     c_word_list.next = c_word_list_from_word_desc_list(word_desc_list[1:])
     return ctypes.POINTER(c_bash.word_list)(c_word_list)
 
@@ -84,6 +88,7 @@ class RedirecteeUnion:
     """
     a redirectee, either a file descriptor or a file name
     """
+
     # use only if R_DUPLICATING_INPUT or R_DUPLICATING_OUTPUT
     dest: Optional[int]
     # use otherwise
@@ -115,15 +120,11 @@ class RedirecteeUnion:
         :return: a dictionary representation of the redirectee union
         """
         if self.dest is not None:
-            return {
-                'dest': self.dest
-            }
+            return {"dest": self.dest}
         elif self.filename is not None:
-            return {
-                'filename': self.filename._to_json()
-            }
+            return {"filename": self.filename._to_json()}
         else:
-            raise Exception('invalid redirectee')
+            raise Exception("invalid redirectee")
 
     def _to_ctypes(self) -> c_bash.REDIRECTEE:
         """
@@ -135,7 +136,7 @@ class RedirecteeUnion:
         elif self.filename is not None:
             c_redirectee.filename = self.filename._to_ctypes()
         else:
-            raise Exception('invalid redirectee')
+            raise Exception("invalid redirectee")
         return c_redirectee
 
 
@@ -143,6 +144,7 @@ class Redirect:
     """
     describes a redirection such as >, >>, <, <<
     """
+
     redirector: RedirecteeUnion  # the thing being redirected
     rflags: list[RedirectFlag]  # flags for redirection
     flags: list[OFlag]
@@ -157,22 +159,29 @@ class Redirect:
         self.rflags = redirect_flag_list_from_rflags(redirect.rflags)
         self.flags = oflag_list_from_int(redirect.flags)
         self.instruction = RInstruction(redirect.instruction)
-        self.here_doc_eof = redirect.here_doc_eof.decode(
-            'utf-8') if redirect.here_doc_eof is not None else None
+        self.here_doc_eof = (
+            redirect.here_doc_eof.decode("utf-8")
+            if redirect.here_doc_eof is not None
+            else None
+        )
         if RedirectFlag.REDIR_VARASSIGN in self.rflags:
             self.redirector = RedirecteeUnion(
-                None, redirect.redirector.filename.contents)
+                None, redirect.redirector.filename.contents
+            )
         else:
             self.redirector = RedirecteeUnion(redirect.redirector.dest, None)
-        if self.instruction == RInstruction.R_DUPLICATING_INPUT or \
-                self.instruction == RInstruction.R_DUPLICATING_OUTPUT or \
-                self.instruction == RInstruction.R_CLOSE_THIS or \
-                self.instruction == RInstruction.R_MOVE_INPUT or \
-                self.instruction == RInstruction.R_MOVE_OUTPUT:
+        if (
+            self.instruction == RInstruction.R_DUPLICATING_INPUT
+            or self.instruction == RInstruction.R_DUPLICATING_OUTPUT
+            or self.instruction == RInstruction.R_CLOSE_THIS
+            or self.instruction == RInstruction.R_MOVE_INPUT
+            or self.instruction == RInstruction.R_MOVE_OUTPUT
+        ):
             self.redirectee = RedirecteeUnion(redirect.redirectee.dest, None)
         else:
             self.redirectee = RedirecteeUnion(
-                None, redirect.redirectee.filename.contents)
+                None, redirect.redirectee.filename.contents
+            )
 
     def __eq__(self, other: object) -> bool:
         """
@@ -201,12 +210,12 @@ class Redirect:
         :return: a dictionary representation of the redirect struct
         """
         return {
-            'redirector': self.redirector._to_json(),
-            'rflags': [x._to_json() for x in self.rflags],
-            'flags': [x._to_json() for x in self.flags],
-            'instruction': self.instruction._to_json(),
-            'redirectee': self.redirectee._to_json(),
-            'here_doc_eof': self.here_doc_eof
+            "redirector": self.redirector._to_json(),
+            "rflags": [x._to_json() for x in self.rflags],
+            "flags": [x._to_json() for x in self.flags],
+            "instruction": self.instruction._to_json(),
+            "redirectee": self.redirectee._to_json(),
+            "here_doc_eof": self.here_doc_eof,
         }
 
     def _to_ctypes(self) -> c_bash.redirect:
@@ -218,9 +227,11 @@ class Redirect:
         if self.redirector.dest is not None:
             c_redirect.redirector.dest = self.redirector.dest
         elif self.redirector.filename is not None:
-            c_redirect.redirector.filename = ctypes.POINTER(c_bash.word_desc)(self.redirector.filename._to_ctypes())
+            c_redirect.redirector.filename = ctypes.POINTER(c_bash.word_desc)(
+                self.redirector.filename._to_ctypes()
+            )
         else:
-            raise Exception('invalid redirector')
+            raise Exception("invalid redirector")
         c_redirect.rflags = int_from_redirect_flag_list(self.rflags)
         c_redirect.flags = int_from_oflag_list(self.flags)
         c_redirect.instruction = self.instruction.value
@@ -228,16 +239,20 @@ class Redirect:
         if self.redirectee.dest is not None:
             c_redirect.redirectee.dest = self.redirectee.dest
         elif self.redirectee.filename is not None:
-            c_redirect.redirectee.filename = ctypes.POINTER(
-                c_bash.word_desc)(self.redirectee.filename._to_ctypes())
+            c_redirect.redirectee.filename = ctypes.POINTER(c_bash.word_desc)(
+                self.redirectee.filename._to_ctypes()
+            )
         else:
-            raise Exception('invalid redirectee')
-        c_redirect.here_doc_eof = self.here_doc_eof.encode(
-            'utf-8') if self.here_doc_eof is not None else None
+            raise Exception("invalid redirectee")
+        c_redirect.here_doc_eof = (
+            self.here_doc_eof.encode("utf-8") if self.here_doc_eof is not None else None
+        )
         return c_redirect
 
 
-def redirect_list_from_redirect(redirect: ctypes._Pointer[c_bash.redirect]) -> list[Redirect]:
+def redirect_list_from_redirect(
+    redirect: ctypes._Pointer[c_bash.redirect],
+) -> list[Redirect]:
     """
     :param redirect: the redirect list
     :return: a list of redirects
@@ -249,7 +264,9 @@ def redirect_list_from_redirect(redirect: ctypes._Pointer[c_bash.redirect]) -> l
     return redirect_list
 
 
-def c_redirect_list_from_redirect_list(redirect_list: list[Redirect]) -> ctypes._Pointer[c_bash.redirect]:
+def c_redirect_list_from_redirect_list(
+    redirect_list: list[Redirect],
+) -> ctypes._Pointer[c_bash.redirect]:
     """
     :param redirect_list: the list of redirects
     :return: a pointer to the first redirect in the list
@@ -261,7 +278,9 @@ def c_redirect_list_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.
     return ctypes.POINTER(c_bash.redirect)(c_redirect)
 
 
-def c_redirect_from_redirect_list(redirect_list: list[Redirect]) -> ctypes._Pointer[c_bash.redirect]:
+def c_redirect_from_redirect_list(
+    redirect_list: list[Redirect],
+) -> ctypes._Pointer[c_bash.redirect]:
     """
     :param redirect_list: the list of redirects
     :return: a pointer to the first redirect in the list
@@ -277,11 +296,12 @@ class ForCom:
     """
     a for command class
     """
+
     flags: list[CommandFlag]
     line: int  # line number the command is on?
     name: WordDesc  # the variable name to get mapped over?
     map_list: list[WordDesc]  # the list of words to map over
-    action: 'Command'  # the action to take for each word in the map list
+    action: "Command"  # the action to take for each word in the map list
 
     def __init__(self, for_c: c_bash.for_com):
         """
@@ -317,11 +337,11 @@ class ForCom:
         :return: a dictionary representation of the for command
         """
         return {
-            'flags': self.flags,
-            'line': self.line,
-            'name': self.name._to_json(),
-            'map_list': [x._to_json() for x in self.map_list],
-            'action': self.action._to_json()
+            "flags": self.flags,
+            "line": self.line,
+            "name": self.name._to_json(),
+            "map_list": [x._to_json() for x in self.map_list],
+            "action": self.action._to_json(),
         }
 
     def _to_ctypes(self) -> c_bash.for_com:
@@ -333,7 +353,7 @@ class ForCom:
         c_for.line = self.line
         c_for.name = ctypes.POINTER(c_bash.word_desc)(self.name._to_ctypes())
         c_for.map_list = c_word_list_from_word_desc_list(self.map_list)
-        c_for.action =  ctypes.POINTER(c_bash.command)(self.action._to_ctypes())
+        c_for.action = ctypes.POINTER(c_bash.command)(self.action._to_ctypes())
         return c_for
 
 
@@ -341,8 +361,9 @@ class Pattern:
     """
     represents a pattern in a case command
     """
+
     patterns: list[WordDesc]  # the list of patterns to match against
-    action: Optional['Command']  # the action to take if the pattern matches
+    action: Optional["Command"]  # the action to take if the pattern matches
     flags: list[PatternFlag]
 
     def __init__(self, pattern: c_bash.pattern_list):
@@ -374,9 +395,9 @@ class Pattern:
         :return: a dictionary representation of the pattern
         """
         return {
-            'patterns': [x._to_json() for x in self.patterns],
-            'action': self.action._to_json() if self.action is not None else None,
-            'flags': self.flags
+            "patterns": [x._to_json() for x in self.patterns],
+            "action": self.action._to_json() if self.action is not None else None,
+            "flags": self.flags,
         }
 
     def _to_ctypes(self) -> c_bash.pattern_list:
@@ -385,13 +406,18 @@ class Pattern:
         """
         c_pattern = c_bash.pattern_list()
         c_pattern.patterns = c_word_list_from_word_desc_list(self.patterns)
-        c_pattern.action = ctypes.POINTER(
-            c_bash.command)(self.action._to_ctypes()) if self.action is not None else None
+        c_pattern.action = (
+            ctypes.POINTER(c_bash.command)(self.action._to_ctypes())
+            if self.action is not None
+            else None
+        )
         c_pattern.flags = int_from_pattern_flag_list(self.flags)
         return c_pattern
 
 
-def pattern_list_from_pattern_list(pattern: ctypes._Pointer[c_bash.pattern_list]) -> list[Pattern]:
+def pattern_list_from_pattern_list(
+    pattern: ctypes._Pointer[c_bash.pattern_list],
+) -> list[Pattern]:
     """
     :param pattern: the pattern list, as they are represented in c
     :return: a list of patterns as they are represented in python
@@ -403,7 +429,9 @@ def pattern_list_from_pattern_list(pattern: ctypes._Pointer[c_bash.pattern_list]
     return pattern_list
 
 
-def c_pattern_list_from_pattern_list(pattern_list: list[Pattern]) -> ctypes._Pointer[c_bash.pattern_list]:
+def c_pattern_list_from_pattern_list(
+    pattern_list: list[Pattern],
+) -> ctypes._Pointer[c_bash.pattern_list]:
     """
     :param pattern_list: the list of patterns, as they are represented in python
     :return: a pointer to the first pattern in the list, as they are represented in c
@@ -419,6 +447,7 @@ class CaseCom:
     """
     a case command class
     """
+
     flags: list[CommandFlag]
     line: int  # line number the command is on?
     word: WordDesc  # the thing to match against
@@ -454,10 +483,10 @@ class CaseCom:
         :return: a dictionary representation of the case command
         """
         return {
-            'flags': self.flags,
-            'line': self.line,
-            'word': self.word._to_json(),
-            'clauses': [x._to_json() for x in self.clauses]
+            "flags": self.flags,
+            "line": self.line,
+            "word": self.word._to_json(),
+            "clauses": [x._to_json() for x in self.clauses],
         }
 
     def _to_ctypes(self) -> c_bash.case_com:
@@ -476,9 +505,10 @@ class WhileCom:
     """
     a while command class
     """
+
     flags: list[CommandFlag]
-    test: 'Command'  # the thing to test
-    action: 'Command'  # the action to take while the test is true
+    test: "Command"  # the thing to test
+    action: "Command"  # the action to take while the test is true
 
     def __init__(self, while_c: c_bash.while_com):
         """
@@ -509,9 +539,9 @@ class WhileCom:
         :return: a dictionary representation of the while command
         """
         return {
-            'flags': self.flags,
-            'test': self.test._to_json(),
-            'action': self.action._to_json()
+            "flags": self.flags,
+            "test": self.test._to_json(),
+            "action": self.action._to_json(),
         }
 
     def _to_ctypes(self) -> c_bash.while_com:
@@ -529,10 +559,11 @@ class IfCom:
     """
     an if command class
     """
+
     flags: list[CommandFlag]
-    test: 'Command'  # the thing to test
-    true_case: 'Command'  # the action to take if the test is true
-    false_case: Optional['Command']  # the action to take if the test is false
+    test: "Command"  # the thing to test
+    true_case: "Command"  # the action to take if the test is true
+    false_case: Optional["Command"]  # the action to take if the test is false
 
     def __init__(self, if_c: c_bash.if_com):
         """
@@ -541,8 +572,7 @@ class IfCom:
         self.flags = command_flag_list_from_int(if_c.flags)
         self.test = Command(if_c.test.contents)
         self.true_case = Command(if_c.true_case.contents)
-        self.false_case = Command(
-            if_c.false_case.contents) if if_c.false_case else None
+        self.false_case = Command(if_c.false_case.contents) if if_c.false_case else None
 
     def __eq__(self, other: object) -> bool:
         """
@@ -565,10 +595,12 @@ class IfCom:
         :return: a dictionary representation of the if command
         """
         return {
-            'flags': self.flags,
-            'test': self.test._to_json(),
-            'true_case': self.true_case._to_json(),
-            'false_case': self.false_case._to_json() if self.false_case is not None else None
+            "flags": self.flags,
+            "test": self.test._to_json(),
+            "true_case": self.true_case._to_json(),
+            "false_case": (
+                self.false_case._to_json() if self.false_case is not None else None
+            ),
         }
 
     def _to_ctypes(self) -> c_bash.if_com:
@@ -578,10 +610,12 @@ class IfCom:
         c_if = c_bash.if_com()
         c_if.flags = int_from_command_flag_list(self.flags)
         c_if.test = ctypes.POINTER(c_bash.command)(self.test._to_ctypes())
-        c_if.true_case = ctypes.POINTER(
-            c_bash.command)(self.true_case._to_ctypes())
-        c_if.false_case = ctypes.POINTER(c_bash.command)(self.false_case._to_ctypes(
-        )) if self.false_case is not None else None
+        c_if.true_case = ctypes.POINTER(c_bash.command)(self.true_case._to_ctypes())
+        c_if.false_case = (
+            ctypes.POINTER(c_bash.command)(self.false_case._to_ctypes())
+            if self.false_case is not None
+            else None
+        )
         return c_if
 
 
@@ -589,9 +623,10 @@ class Connection:
     """
     represents connections
     """
+
     flags: list[CommandFlag]
-    first: 'Command'  # the first command to run
-    second: Optional['Command']  # the second command to run
+    first: "Command"  # the first command to run
+    second: Optional["Command"]  # the second command to run
     connector: ConnectionType  # the type of connection
 
     def __init__(self, connection: c_bash.connection):
@@ -600,8 +635,7 @@ class Connection:
         """
         self.flags = command_flag_list_from_int(connection.ignore)
         self.first = Command(connection.first.contents)
-        self.second = Command(
-            connection.second.contents) if connection.second else None
+        self.second = Command(connection.second.contents) if connection.second else None
         self.connector = ConnectionType(connection.connector)
 
     def __eq__(self, other: object) -> bool:
@@ -626,10 +660,10 @@ class Connection:
         :return: a dictionary representation of the connection
         """
         return {
-            'flags': [x._to_json() for x in self.flags],
-            'first': self.first._to_json(),
-            'second': self.second._to_json() if self.second is not None else None,
-            'connector': self.connector._to_json()  # todo: figure out what this int means
+            "flags": [x._to_json() for x in self.flags],
+            "first": self.first._to_json(),
+            "second": self.second._to_json() if self.second is not None else None,
+            "connector": self.connector._to_json(),  # todo: figure out what this int means
         }
 
     def _to_ctypes(self) -> c_bash.connection:
@@ -638,10 +672,12 @@ class Connection:
         """
         c_connection = c_bash.connection()
         c_connection.ignore = int_from_command_flag_list(self.flags)
-        c_connection.first = ctypes.POINTER(
-            c_bash.command)(self.first._to_ctypes())
-        c_connection.second = ctypes.POINTER(
-            c_bash.command)(self.second._to_ctypes()) if self.second is not None else None
+        c_connection.first = ctypes.POINTER(c_bash.command)(self.first._to_ctypes())
+        c_connection.second = (
+            ctypes.POINTER(c_bash.command)(self.second._to_ctypes())
+            if self.second is not None
+            else None
+        )
         c_connection.connector = self.connector.value
         return c_connection
 
@@ -650,6 +686,7 @@ class SimpleCom:
     """
     a simple command class
     """
+
     flags: list[CommandFlag]
     line: int  # line number the command is on
     words: list[WordDesc]  # program name, arguments, variable assignments, etc
@@ -684,10 +721,10 @@ class SimpleCom:
         :return: a dictionary representation of the simple command
         """
         return {
-            'flags': [x._to_json() for x in self.flags],
-            'line': self.line,
-            'words': [x._to_json() for x in self.words],
-            'redirects': [x._to_json() for x in self.redirects]
+            "flags": [x._to_json() for x in self.flags],
+            "line": self.line,
+            "words": [x._to_json() for x in self.words],
+            "redirects": [x._to_json() for x in self.redirects],
         }
 
     def _to_ctypes(self) -> c_bash.simple_com:
@@ -706,10 +743,11 @@ class FunctionDef:
     """
     for function definitions
     """
+
     flags: list[CommandFlag]
     line: int  # line number the command is on
     name: WordDesc  # the name of the function
-    command: 'Command'  # the execution tree for the function
+    command: "Command"  # the execution tree for the function
     source_file: Optional[str]  # the file the function was defined in, if any
 
     def __init__(self, function: c_bash.function_def):
@@ -720,8 +758,9 @@ class FunctionDef:
         self.line = function.line
         self.name = WordDesc(function.name.contents)
         self.command = Command(function.command.contents)
-        self.source_file = function.source_file.decode(
-            'utf-8') if function.source_file else None
+        self.source_file = (
+            function.source_file.decode("utf-8") if function.source_file else None
+        )
 
     def __eq__(self, other: object) -> bool:
         """
@@ -747,11 +786,11 @@ class FunctionDef:
         :return: a dictionary representation of the function definition
         """
         return {
-            'flags': [x._to_json() for x in self.flags],
-            'line': self.line,
-            'name': self.name._to_json(),
-            'command': self.command._to_json(),
-            'source_file': self.source_file if self.source_file is not None else None
+            "flags": [x._to_json() for x in self.flags],
+            "line": self.line,
+            "name": self.name._to_json(),
+            "command": self.command._to_json(),
+            "source_file": self.source_file if self.source_file is not None else None,
         }
 
     def _to_ctypes(self) -> c_bash.function_def:
@@ -761,12 +800,11 @@ class FunctionDef:
         c_function = c_bash.function_def()
         c_function.flags = int_from_command_flag_list(self.flags)
         c_function.line = self.line
-        c_function.name = ctypes.POINTER(
-            c_bash.word_desc)(self.name._to_ctypes())
-        c_function.command = ctypes.POINTER(
-            c_bash.command)(self.command._to_ctypes())
-        c_function.source_file = self.source_file.encode(
-            'utf-8') if self.source_file is not None else None
+        c_function.name = ctypes.POINTER(c_bash.word_desc)(self.name._to_ctypes())
+        c_function.command = ctypes.POINTER(c_bash.command)(self.command._to_ctypes())
+        c_function.source_file = (
+            self.source_file.encode("utf-8") if self.source_file is not None else None
+        )
         return c_function
 
 
@@ -774,8 +812,9 @@ class GroupCom:
     """
     group commands allow pipes and redirections to be applied to a group of commands
     """
+
     flags: list[CommandFlag]
-    command: 'Command'  # the command to run
+    command: "Command"  # the command to run
 
     def __init__(self, group: c_bash.group_com):
         """
@@ -802,8 +841,8 @@ class GroupCom:
         :return: a dictionary representation of the group command
         """
         return {
-            'line': [x._to_json() for x in self.flags],
-            'command': self.command._to_json()
+            "line": [x._to_json() for x in self.flags],
+            "command": self.command._to_json(),
         }
 
     def _to_ctypes(self) -> c_bash.group_com:
@@ -812,8 +851,7 @@ class GroupCom:
         """
         c_group = c_bash.group_com()
         c_group.ignore = int_from_command_flag_list(self.flags)
-        c_group.command = ctypes.POINTER(
-            c_bash.command)(self.command._to_ctypes())
+        c_group.command = ctypes.POINTER(c_bash.command)(self.command._to_ctypes())
         return c_group
 
 
@@ -821,11 +859,12 @@ class SelectCom:
     """
     the select command is like a for loop but with a menu
     """
+
     flags: list[CommandFlag]
     line: int  # line number the command is on
     name: WordDesc  # the name of the variable?
     map_list: list[WordDesc]  # the list of words to map over
-    action: 'Command'  # the action to take for each word in the map list, during execution name is bound to member of map_list
+    action: "Command"  # the action to take for each word in the map list, during execution name is bound to member of map_list
 
     def __init__(self, select: c_bash.select_com):
         """
@@ -860,11 +899,11 @@ class SelectCom:
         :return: a dictionary representation of the select command
         """
         return {
-            'flags': [x._to_json() for x in self.flags],
-            'line': self.line,
-            'name': self.name._to_json(),
-            'map_list': [x._to_json() for x in self.map_list],
-            'action': self.action._to_json()
+            "flags": [x._to_json() for x in self.flags],
+            "line": self.line,
+            "name": self.name._to_json(),
+            "map_list": [x._to_json() for x in self.map_list],
+            "action": self.action._to_json(),
         }
 
     def _to_ctypes(self) -> c_bash.select_com:
@@ -884,6 +923,7 @@ class ArithCom:
     """
     arithmetic expression ((...))
     """
+
     flags: list[CommandFlag]
     line: int  # line number the command is on
     exp: list[WordDesc]  # the expression to evaluate
@@ -915,9 +955,9 @@ class ArithCom:
         :return: a dictionary representation of the arith command
         """
         return {
-            'flags': [x._to_json() for x in self.flags],
-            'line': self.line,
-            'exp': [x._to_json() for x in self.exp]
+            "flags": [x._to_json() for x in self.flags],
+            "line": self.line,
+            "exp": [x._to_json() for x in self.exp],
         }
 
     def _to_ctypes(self) -> c_bash.arith_com:
@@ -935,12 +975,13 @@ class CondCom:
     """
     conditional expression [[...]]
     """
+
     flags: list[CommandFlag]
     line: int  # line number the command is on
     type: CondTypeEnum  # the type of conditional expression
     op: Optional[WordDesc]  # binary tree vibe?
-    left: Optional['CondCom']  # the left side of the expression
-    right: Optional['CondCom']  # the right side of the expression
+    left: Optional["CondCom"]  # the left side of the expression
+    right: Optional["CondCom"]  # the right side of the expression
 
     def __init__(self, cond: c_bash.cond_com):
         """
@@ -950,10 +991,8 @@ class CondCom:
         self.line = cond.line
         self.type = CondTypeEnum(cond.type)
         self.op = WordDesc(cond.op.contents) if cond.op else None
-        self.left = CondCom(
-            cond.left.contents) if cond.left else None
-        self.right = CondCom(
-            cond.right.contents) if cond.right else None
+        self.left = CondCom(cond.left.contents) if cond.left else None
+        self.right = CondCom(cond.right.contents) if cond.right else None
 
     def __eq__(self, other: object) -> bool:
         """
@@ -980,12 +1019,12 @@ class CondCom:
         :return: a dictionary representation of the cond command
         """
         return {
-            'flags': [x._to_json() for x in self.flags],
-            'line': self.line,
-            'cond_type': self.type._to_json(),
-            'op': self.op._to_json() if self.op is not None else None,
-            'left': self.left._to_json() if self.left is not None else None,
-            'right': self.right._to_json() if self.right is not None else None
+            "flags": [x._to_json() for x in self.flags],
+            "line": self.line,
+            "cond_type": self.type._to_json(),
+            "op": self.op._to_json() if self.op is not None else None,
+            "left": self.left._to_json() if self.left is not None else None,
+            "right": self.right._to_json() if self.right is not None else None,
         }
 
     def _to_ctypes(self) -> c_bash.cond_com:
@@ -996,11 +1035,21 @@ class CondCom:
         c_cond.flags = int_from_command_flag_list(self.flags)
         c_cond.line = self.line
         c_cond.type = self.type.value
-        c_cond.op = ctypes.POINTER(c_bash.word_desc)(self.op._to_ctypes()) if self.op is not None else None
-        c_cond.left = ctypes.POINTER(c_bash.cond_com)(
-            self.left._to_ctypes()) if self.left is not None else None
-        c_cond.right = ctypes.POINTER(c_bash.cond_com)(
-            self.right._to_ctypes()) if self.right is not None else None
+        c_cond.op = (
+            ctypes.POINTER(c_bash.word_desc)(self.op._to_ctypes())
+            if self.op is not None
+            else None
+        )
+        c_cond.left = (
+            ctypes.POINTER(c_bash.cond_com)(self.left._to_ctypes())
+            if self.left is not None
+            else None
+        )
+        c_cond.right = (
+            ctypes.POINTER(c_bash.cond_com)(self.right._to_ctypes())
+            if self.right is not None
+            else None
+        )
         return c_cond
 
 
@@ -1008,12 +1057,13 @@ class ArithForCom:
     """
     a c-style for loop ((init; test; step)) action
     """
+
     flags: list[CommandFlag]
     line: int  # line number the command is on
     init: list[WordDesc]  # the initial values of the variables
     test: list[WordDesc]  # the test to perform
     step: list[WordDesc]  # the step to take
-    action: 'Command'  # the action to take for each iteration
+    action: "Command"  # the action to take for each iteration
 
     def __init__(self, arith_for: c_bash.arith_for_com):
         """
@@ -1051,12 +1101,12 @@ class ArithForCom:
         :return: a dictionary representation of the arith_for command
         """
         return {
-            'flags': [x._to_json() for x in self.flags],
-            'line': self.line,
-            'init': [x._to_json() for x in self.init],
-            'test': [x._to_json() for x in self.test],
-            'step': [x._to_json() for x in self.step],
-            'action': self.action._to_json()
+            "flags": [x._to_json() for x in self.flags],
+            "line": self.line,
+            "init": [x._to_json() for x in self.init],
+            "test": [x._to_json() for x in self.test],
+            "step": [x._to_json() for x in self.step],
+            "action": self.action._to_json(),
         }
 
     def _to_ctypes(self) -> c_bash.arith_for_com:
@@ -1069,8 +1119,7 @@ class ArithForCom:
         c_arith_for.init = c_word_list_from_word_desc_list(self.init)
         c_arith_for.test = c_word_list_from_word_desc_list(self.test)
         c_arith_for.step = c_word_list_from_word_desc_list(self.step)
-        c_arith_for.action = ctypes.POINTER(
-            c_bash.command)(self.action._to_ctypes())
+        c_arith_for.action = ctypes.POINTER(c_bash.command)(self.action._to_ctypes())
         return c_arith_for
 
 
@@ -1078,9 +1127,10 @@ class SubshellCom:
     """
     a subshell command
     """
+
     flags: list[CommandFlag]  # unclear flag type
     line: int  # line number the command is on
-    command: 'Command'  # the command to run in the subshell
+    command: "Command"  # the command to run in the subshell
 
     def __init__(self, subshell: c_bash.subshell_com):
         """
@@ -1108,9 +1158,9 @@ class SubshellCom:
         :return: a dictionary representation of the subshell command
         """
         return {
-            'flags': [x._to_json() for x in self.flags],
-            'line': self.line,
-            'command': self.command._to_json()
+            "flags": [x._to_json() for x in self.flags],
+            "line": self.line,
+            "command": self.command._to_json(),
         }
 
     def _to_ctypes(self) -> c_bash.subshell_com:
@@ -1120,8 +1170,7 @@ class SubshellCom:
         c_subshell = c_bash.subshell_com()
         c_subshell.flags = int_from_command_flag_list(self.flags)
         c_subshell.line = self.line
-        c_subshell.command = ctypes.POINTER(
-            c_bash.command)(self.command._to_ctypes())
+        c_subshell.command = ctypes.POINTER(c_bash.command)(self.command._to_ctypes())
         return c_subshell
 
 
@@ -1129,9 +1178,10 @@ class CoprocCom:
     """
     a coprocess command
     """
+
     flags: list[CommandFlag]  # unclear flag type
     name: str  # the name of the coprocess
-    command: 'Command'  # the command to run in the coprocess
+    command: "Command"  # the command to run in the coprocess
 
     def __init__(self, coproc: c_bash.coproc_com):
         """
@@ -1139,7 +1189,7 @@ class CoprocCom:
         """
         self.flags = command_flag_list_from_int(coproc.flags)
         # c_char_p is a bytes object so we need to decode it
-        self.name = coproc.name.decode('utf-8')
+        self.name = coproc.name.decode("utf-8")
         self.command = Command(coproc.command.contents)
 
     def __eq__(self, other: object) -> bool:
@@ -1163,9 +1213,9 @@ class CoprocCom:
         :return: a dictionary representation of the coproc command
         """
         return {
-            'flags': [x._to_json() for x in self.flags],
-            'name': self.name,
-            'command': self.command._to_json()
+            "flags": [x._to_json() for x in self.flags],
+            "name": self.name,
+            "command": self.command._to_json(),
         }
 
     def _to_ctypes(self) -> c_bash.coproc_com:
@@ -1174,7 +1224,7 @@ class CoprocCom:
         """
         c_coproc = c_bash.coproc_com()
         c_coproc.flags = int_from_command_flag_list(self.flags)
-        c_coproc.name = self.name.encode('utf-8')
+        c_coproc.name = self.name.encode("utf-8")
         c_coproc.command = ctypes.POINTER(c_bash.command)(self.command._to_ctypes())
         return c_coproc
 
@@ -1184,6 +1234,7 @@ class ValueUnion:
     a union of all the possible command types
     exactly one of these will be non-null
     """
+
     for_com: Optional[ForCom]
     case_com: Optional[CaseCom]
     while_com: Optional[WhileCom]
@@ -1199,10 +1250,7 @@ class ValueUnion:
     subshell_com: Optional[SubshellCom]
     coproc_com: Optional[CoprocCom]
 
-    def __init__(
-            self,
-            command_type: CommandType,
-            value: c_bash.value):
+    def __init__(self, command_type: CommandType, value: c_bash.value):
         """
         :param command_type: the type of command
         :param value: the value union struct
@@ -1253,7 +1301,7 @@ class ValueUnion:
         elif command_type == CommandType.CM_COPROC:
             self.coproc_com = CoprocCom(value.Coproc.contents)
         else:
-            raise Exception('Unknown command type provided.')
+            raise Exception("Unknown command type provided.")
 
     def __eq__(self, other: object) -> bool:
         """
@@ -1325,7 +1373,7 @@ class ValueUnion:
         elif self.coproc_com is not None:
             return self.coproc_com._to_json()
         else:
-            raise Exception('invalid value union')
+            raise Exception("invalid value union")
 
     def _to_ctypes(self) -> c_bash.value:
         """
@@ -1333,49 +1381,55 @@ class ValueUnion:
         """
         c_value = c_bash.value()
         if self.for_com is not None:
-            c_value.For = ctypes.POINTER(c_bash.for_com)(
-                self.for_com._to_ctypes())
+            c_value.For = ctypes.POINTER(c_bash.for_com)(self.for_com._to_ctypes())
         elif self.case_com is not None:
-            c_value.Case = ctypes.POINTER(c_bash.case_com)(
-                self.case_com._to_ctypes())
+            c_value.Case = ctypes.POINTER(c_bash.case_com)(self.case_com._to_ctypes())
         elif self.while_com is not None:
             c_value.While = ctypes.POINTER(c_bash.while_com)(
-                self.while_com._to_ctypes())
+                self.while_com._to_ctypes()
+            )
         elif self.if_com is not None:
-            c_value.If = ctypes.POINTER(c_bash.if_com)(
-                self.if_com._to_ctypes())
+            c_value.If = ctypes.POINTER(c_bash.if_com)(self.if_com._to_ctypes())
         elif self.connection is not None:
-            c_value.Connection = ctypes.POINTER(
-                c_bash.connection)(self.connection._to_ctypes())
+            c_value.Connection = ctypes.POINTER(c_bash.connection)(
+                self.connection._to_ctypes()
+            )
         elif self.simple_com is not None:
             c_value.Simple = ctypes.POINTER(c_bash.simple_com)(
-                self.simple_com._to_ctypes())
+                self.simple_com._to_ctypes()
+            )
         elif self.function_def is not None:
-            c_value.Function_def = ctypes.POINTER(
-                c_bash.function_def)(self.function_def._to_ctypes())
+            c_value.Function_def = ctypes.POINTER(c_bash.function_def)(
+                self.function_def._to_ctypes()
+            )
         elif self.group_com is not None:
             c_value.Group = ctypes.POINTER(c_bash.group_com)(
-                self.group_com._to_ctypes())
+                self.group_com._to_ctypes()
+            )
         elif self.select_com is not None:
             c_value.Select = ctypes.POINTER(c_bash.select_com)(
-                self.select_com._to_ctypes())
+                self.select_com._to_ctypes()
+            )
         elif self.arith_com is not None:
-            c_value.Arith = ctypes.POINTER(
-                c_bash.arith_com)(self.arith_com._to_ctypes())
+            c_value.Arith = ctypes.POINTER(c_bash.arith_com)(
+                self.arith_com._to_ctypes()
+            )
         elif self.cond_com is not None:
-            c_value.Cond = ctypes.POINTER(c_bash.cond_com)(
-                self.cond_com._to_ctypes())
+            c_value.Cond = ctypes.POINTER(c_bash.cond_com)(self.cond_com._to_ctypes())
         elif self.arith_for_com is not None:
             c_value.ArithFor = ctypes.POINTER(c_bash.arith_for_com)(
-                self.arith_for_com._to_ctypes())
+                self.arith_for_com._to_ctypes()
+            )
         elif self.subshell_com is not None:
             c_value.Subshell = ctypes.POINTER(c_bash.subshell_com)(
-                self.subshell_com._to_ctypes())
+                self.subshell_com._to_ctypes()
+            )
         elif self.coproc_com is not None:
             c_value.Coproc = ctypes.POINTER(c_bash.coproc_com)(
-                self.coproc_com._to_ctypes())
+                self.coproc_com._to_ctypes()
+            )
         else:
-            raise Exception('invalid value union')
+            raise Exception("invalid value union")
         return c_value
 
 
@@ -1384,6 +1438,7 @@ class Command:
     a mirror of the bash command struct defined here:
     https://git.savannah.gnu.org/cgit/bash.git/tree/command.h
     """
+
     type: CommandType  # command type
     flags: list[CommandFlag]  # command flags
     # line: int  # line number the command is on - seems to be unused
@@ -1423,11 +1478,11 @@ class Command:
         :return: a dictionary representation of the command
         """
         return {
-            'type': self.type._to_json(),
-            'flags': self.flags,
+            "type": self.type._to_json(),
+            "flags": self.flags,
             # 'line': self.line,
-            'redirects': [x._to_json() for x in self.redirects],
-            'value': self.value._to_json()
+            "redirects": [x._to_json() for x in self.redirects],
+            "value": self.value._to_json(),
         }
 
     def _to_ctypes(self) -> c_bash.command:

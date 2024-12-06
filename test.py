@@ -115,7 +115,7 @@ def read_from_file(file: str) -> bytes:
 
 def test_bash_and_ast_consistency():
     """
-    This test runs bash_to_ast and ast_to_bash on every test file in the bash-5.2/tests directory 
+    This test runs bash_to_ast and ast_to_bash on every test file in the bash-5.2/tests directory
     back and forth NUM_ITERATIONS times. On each iteration it makes sure that the AST is the same as the previous iteration.
     It also makes sure that the bash file is the same as the previous iteration excluding the first iteration.
     Finally if getting the AST fails, it will make sure that it fails consistently.

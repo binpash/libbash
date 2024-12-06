@@ -1,4 +1,3 @@
-
 def list_same_elements(l1: list, l2: list) -> bool:
     """
     Checks if two lists are equal (order doesn't matter)
@@ -11,7 +10,7 @@ def list_same_elements(l1: list, l2: list) -> bool:
 
     if len(l1) != len(l2):
         return False
-    
+
     for i in l1:
         found_match = False
         for j in l2:
@@ -21,5 +20,5 @@ def list_same_elements(l1: list, l2: list) -> bool:
                 break
         if not found_match:
             return False
-    
+
     return True

@@ -35,7 +35,7 @@ class build_libbash(build_py):
         with enter_dir('libbash/bash-5.2'):
             try_exec('./configure')
             try_exec('make', 'clean', 'all')
-        
+
         shutil.copy2('libbash/bash-5.2/bash.so', os.path.join(self.build_lib, 'libbash/bash-5.2/bash.so'))
 
 
