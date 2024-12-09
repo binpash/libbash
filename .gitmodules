@@ -1,3 +1,3 @@
 [submodule "bash-5.2"]
 	path = libbash/bash-5.2
-	url = https://github.com/sethsabar/bash-for-libbash.git
+	url = https://github.com/binpash/bash-for-libbash
