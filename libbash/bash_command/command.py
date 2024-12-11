@@ -54,7 +54,7 @@ class WordDesc:
         return c_word_desc
 
 
-def word_desc_list_from_word_list(word_list: ctypes.POINTER(c_bash.word_list)) -> list[WordDesc]:
+def word_desc_list_from_word_list(word_list: ctypes._Pointer[c_bash.word_list]) -> list[WordDesc]:
     """
     :param word_list: the word list
     :return: a list of word descriptions
@@ -66,7 +66,7 @@ def word_desc_list_from_word_list(word_list: ctypes.POINTER(c_bash.word_list)) -
     return word_desc_list
 
 
-def c_word_list_from_word_desc_list(word_desc_list: list[WordDesc]) -> ctypes.POINTER(c_bash.word_list):
+def c_word_list_from_word_desc_list(word_desc_list: list[WordDesc]) -> ctypes._Pointer[c_bash.word_list]:
     """
     :param word_desc_list: the list of word descriptions
     :return: a pointer to the first word description in the list
@@ -196,7 +196,7 @@ class Redirect:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list, None]]:
         """
         :return: a dictionary representation of the redirect struct
         """
@@ -206,7 +206,7 @@ class Redirect:
             'flags': [x._to_json() for x in self.flags],
             'instruction': self.instruction._to_json(),
             'redirectee': self.redirectee._to_json(),
-            'here_doc_eof': self.here_doc_eof if self.here_doc_eof is not None else None
+            'here_doc_eof': self.here_doc_eof
         }
 
     def _to_ctypes(self) -> c_bash.redirect:
@@ -237,7 +237,7 @@ class Redirect:
         return c_redirect
 
 
-def redirect_list_from_redirect(redirect: ctypes.POINTER(c_bash.redirect)) -> list[Redirect]:
+def redirect_list_from_redirect(redirect: ctypes._Pointer[c_bash.redirect]) -> list[Redirect]:
     """
     :param redirect: the redirect list
     :return: a list of redirects
@@ -249,7 +249,7 @@ def redirect_list_from_redirect(redirect: ctypes.POINTER(c_bash.redirect)) -> li
     return redirect_list
 
 
-def c_redirect_list_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.POINTER(c_bash.redirect):
+def c_redirect_list_from_redirect_list(redirect_list: list[Redirect]) -> ctypes._Pointer[c_bash.redirect]:
     """
     :param redirect_list: the list of redirects
     :return: a pointer to the first redirect in the list
@@ -261,7 +261,7 @@ def c_redirect_list_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.
     return ctypes.POINTER(c_bash.redirect)(c_redirect)
 
 
-def c_redirect_from_redirect_list(redirect_list: list[Redirect]) -> ctypes.POINTER(c_bash.redirect):
+def c_redirect_from_redirect_list(redirect_list: list[Redirect]) -> ctypes._Pointer[c_bash.redirect]:
     """
     :param redirect_list: the list of redirects
     :return: a pointer to the first redirect in the list
@@ -369,7 +369,7 @@ class Pattern:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, dict, list]]:
+    def _to_json(self) -> dict[str, Union[int, dict, list, None]]:
         """
         :return: a dictionary representation of the pattern
         """
@@ -391,7 +391,7 @@ class Pattern:
         return c_pattern
 
 
-def pattern_list_from_pattern_list(pattern: ctypes.POINTER(c_bash.pattern_list)) -> list[Pattern]:
+def pattern_list_from_pattern_list(pattern: ctypes._Pointer[c_bash.pattern_list]) -> list[Pattern]:
     """
     :param pattern: the pattern list, as they are represented in c
     :return: a list of patterns as they are represented in python
@@ -403,7 +403,7 @@ def pattern_list_from_pattern_list(pattern: ctypes.POINTER(c_bash.pattern_list))
     return pattern_list
 
 
-def c_pattern_list_from_pattern_list(pattern_list: list[Pattern]) -> ctypes.POINTER(c_bash.pattern_list):
+def c_pattern_list_from_pattern_list(pattern_list: list[Pattern]) -> ctypes._Pointer[c_bash.pattern_list]:
     """
     :param pattern_list: the list of patterns, as they are represented in python
     :return: a pointer to the first pattern in the list, as they are represented in c
@@ -504,7 +504,7 @@ class WhileCom:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
         :return: a dictionary representation of the while command
         """
@@ -560,7 +560,7 @@ class IfCom:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list, None]]:
         """
         :return: a dictionary representation of the if command
         """
@@ -621,7 +621,7 @@ class Connection:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list, None]]:
         """
         :return: a dictionary representation of the connection
         """
@@ -742,7 +742,7 @@ class FunctionDef:
         #     return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict, None]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list, None]]:
         """
         :return: a dictionary representation of the function definition
         """
@@ -797,7 +797,7 @@ class GroupCom:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
         :return: a dictionary representation of the group command
         """
@@ -910,7 +910,7 @@ class ArithCom:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
         :return: a dictionary representation of the arith command
         """
@@ -975,7 +975,7 @@ class CondCom:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list, None]]:
         """
         :return: a dictionary representation of the cond command
         """
@@ -1103,7 +1103,7 @@ class SubshellCom:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
         :return: a dictionary representation of the subshell command
         """
@@ -1158,7 +1158,7 @@ class CoprocCom:
             return False
         return True
 
-    def _to_json(self) -> dict[str, Union[int, str, dict]]:
+    def _to_json(self) -> dict[str, Union[int, str, dict, list]]:
         """
         :return: a dictionary representation of the coproc command
         """
@@ -1292,7 +1292,7 @@ class ValueUnion:
             return False
         return True
 
-    def _to_json(self) -> dict[str, dict]:
+    def _to_json(self) -> dict:
         """
         :return: a dictionary representation of the value union
         """

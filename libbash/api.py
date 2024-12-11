@@ -4,6 +4,8 @@ from .bash_command import *
 import ctypes
 import os
 
+from typing import Any
+
 # current location + ../../bash-5.2/bash.so
 BASH_FILE_PATH = os.path.join(os.path.dirname(
     __file__), "bash-5.2", "bash.so")
@@ -64,7 +66,7 @@ def ast_to_bash(ast: list[Command], write_to: str):
         # don't decode the bytes, just write them to the file
         f.write(bash_str)
 
-def ast_to_json(ast: list[Command]) -> list[dict[str, any]]:
+def ast_to_json(ast: list[Command]) -> list[dict[str, Any]]:
     """
     Converts the AST to a JSON style object.
     :param ast: The AST, a list of Command objects.
@@ -74,7 +76,7 @@ def ast_to_json(ast: list[Command]) -> list[dict[str, any]]:
 
 
 def bash_to_ast(bash_file: str, with_linno_info: bool=False) -> \
-        [list[Command], list[Command, bytes, int, int]]:
+        list[Command] | list[tuple[Command, bytes, int, int]]:
     """
     Extracts the AST from the bash source code.
     Uses ctypes to call an injected bash function that returns the AST.
@@ -92,7 +94,7 @@ def bash_to_ast(bash_file: str, with_linno_info: bool=False) -> \
     bash.set_bash_file.restype = ctypes.c_int
 
     # call the function
-    set_result: ctypes.c_int = bash.set_bash_file(bash_file.encode('utf-8'))
+    set_result: int = bash.set_bash_file(bash_file.encode('utf-8'))
     if set_result < 0:
         raise IOError("Setting bash file failed")
 
@@ -119,7 +121,7 @@ def bash_to_ast(bash_file: str, with_linno_info: bool=False) -> \
                 "Bash read command failed, shell script may be invalid")
 
         # read the global_command variable
-        global_command: ctypes.POINTER(c_bash.command) = ctypes.POINTER(
+        global_command: ctypes._Pointer[c_bash.command] = ctypes.POINTER(
             c_bash.command).in_dll(bash, 'global_command')
 
         # global_command is null
