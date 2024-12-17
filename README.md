@@ -2,7 +2,7 @@
 
 **NOTE: This project is mostly functional, however there are a few minor bugs with the Bash source code causing issues with our API. Take a look at `test.py` to see which tests we are currently not testing because they will fail!**
 
-`libbash` can be installed via pip: https://pypi.org/project/libbash/ 
+`libbash` can be installed via pip: https://pypi.org/project/libbash/
 
 ## API
 
@@ -44,8 +44,8 @@ while [ $counter -le 5 ]; do
 done
 ```
 
-Whether `while` is aliased or not depends on the time of day that the script is run, and this affects the functionality of the `while` loop. This is because alias expansion is done 
-*before* parsing in Bash. As this example shows, determining alias expansions is not possible without executing a Bash script. Therefore, one can not expect any uses of `alias` or 
+Whether `while` is aliased or not depends on the time of day that the script is run, and this affects the functionality of the `while` loop. This is because alias expansion is done
+*before* parsing in Bash. As this example shows, determining alias expansions is not possible without executing a Bash script. Therefore, one can not expect any uses of `alias` or
 other programs that change the script before parse-time to be reflected.
 
 ## Additional Documents

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from enum import Enum
 
 
@@ -5,6 +7,7 @@ class OFlag(Enum):
     """
     represents open flags present in the OpenFlag class
     """
+
     O_RDONLY = 0
     O_WRONLY = 1 << 0
     O_RDWR = 1 << 1
@@ -29,19 +32,19 @@ class OFlag(Enum):
         :return: the string representation of the open flag
         """
         if self == OFlag.O_RDONLY:
-            return 'read_only'
+            return "read_only"
         elif self == OFlag.O_WRONLY:
-            return 'write_only'
+            return "write_only"
         elif self == OFlag.O_RDWR:
-            return 'read_write'
+            return "read_write"
         elif self == OFlag.O_APPEND:
-            return 'append'
+            return "append"
         elif self == OFlag.O_CREAT:
-            return 'create'
+            return "create"
         elif self == OFlag.O_TRUNC:
-            return 'truncate'
+            return "truncate"
         else:
-            raise Exception('invalid open flag')
+            raise Exception("invalid open flag")
 
 
 def oflag_list_from_int(oflag_int: int) -> list[OFlag]:
@@ -71,38 +74,39 @@ class WordDescFlag(Enum):
     """
     represents word description flags present in the WordDesc class
     """
-    W_HASDOLLAR = 1 << 0          # dollar sign present
-    W_QUOTED = 1 << 1             # some form of quote character is present
-    W_ASSIGNMENT = 1 << 2        # this word is a variable assignment
-    W_SPLITSPACE = 1 << 3        # split this word on " " regardless of IFS
+
+    W_HASDOLLAR = 1 << 0  # dollar sign present
+    W_QUOTED = 1 << 1  # some form of quote character is present
+    W_ASSIGNMENT = 1 << 2  # this word is a variable assignment
+    W_SPLITSPACE = 1 << 3  # split this word on " " regardless of IFS
     # do not perform word splitting on this word because IFS is empty string
     W_NOSPLIT = 1 << 4
-    W_NOGLOB = 1 << 5            # do not perform globbing on this word
+    W_NOGLOB = 1 << 5  # do not perform globbing on this word
     # don't split word except for $@ expansion (using spaces) because context does not allow it
     W_NOSPLIT2 = 1 << 6
-    W_TILDEEXP = 1 << 7          # tilde expand this assignment word
-    W_DOLLARAT = 1 << 8          # UNUSED - $@ and its special handling
-    W_ARRAYREF = 1 << 9          # word is a valid array reference
-    W_NOCOMSUB = 1 << 10         # don't perform command substitution on this word
-    W_ASSIGNRHS = 1 << 11        # word is rhs of an assignment statement
-    W_NOTILDE = 1 << 12          # don't perform tilde expansion on this word
-    W_NOASSNTILDE = 1 << 13      # don't do tilde expansion like an assignment statement
-    W_EXPANDRHS = 1 << 14        # expanding word in ${paramOPword}
-    W_COMPASSIGN = 1 << 15       # compound assignment
-    W_ASSNBLTIN = 1 << 16        # word is a builtin command that takes assignments
-    W_ASSIGNARG = 1 << 17        # word is assignment argument to command
-    W_HASQUOTEDNULL = 1 << 18    # word contains a quoted null character
-    W_DQUOTE = 1 << 19           # UNUSED - word should be treated as if double-quoted
-    W_NOPROCSUB = 1 << 20        # don't perform process substitution
-    W_SAWQUOTEDNULL = 1 << 21    # word contained a quoted null that was removed
-    W_ASSIGNASSOC = 1 << 22      # word looks like associative array assignment
-    W_ASSIGNARRAY = 1 << 23      # word looks like a compound indexed array assignment
-    W_ARRAYIND = 1 << 24         # word is an array index being expanded
+    W_TILDEEXP = 1 << 7  # tilde expand this assignment word
+    W_DOLLARAT = 1 << 8  # UNUSED - $@ and its special handling
+    W_ARRAYREF = 1 << 9  # word is a valid array reference
+    W_NOCOMSUB = 1 << 10  # don't perform command substitution on this word
+    W_ASSIGNRHS = 1 << 11  # word is rhs of an assignment statement
+    W_NOTILDE = 1 << 12  # don't perform tilde expansion on this word
+    W_NOASSNTILDE = 1 << 13  # don't do tilde expansion like an assignment statement
+    W_EXPANDRHS = 1 << 14  # expanding word in ${paramOPword}
+    W_COMPASSIGN = 1 << 15  # compound assignment
+    W_ASSNBLTIN = 1 << 16  # word is a builtin command that takes assignments
+    W_ASSIGNARG = 1 << 17  # word is assignment argument to command
+    W_HASQUOTEDNULL = 1 << 18  # word contains a quoted null character
+    W_DQUOTE = 1 << 19  # UNUSED - word should be treated as if double-quoted
+    W_NOPROCSUB = 1 << 20  # don't perform process substitution
+    W_SAWQUOTEDNULL = 1 << 21  # word contained a quoted null that was removed
+    W_ASSIGNASSOC = 1 << 22  # word looks like associative array assignment
+    W_ASSIGNARRAY = 1 << 23  # word looks like a compound indexed array assignment
+    W_ARRAYIND = 1 << 24  # word is an array index being expanded
     # word is a global assignment to declare (declare/typeset -g)
     W_ASSNGLOBAL = 1 << 25
-    W_NOBRACE = 1 << 26          # don't perform brace expansion
-    W_COMPLETE = 1 << 27         # word is being expanded for completion
-    W_CHKLOCAL = 1 << 28         # check for local vars on assignment
+    W_NOBRACE = 1 << 26  # don't perform brace expansion
+    W_COMPLETE = 1 << 27  # word is being expanded for completion
+    W_CHKLOCAL = 1 << 28  # check for local vars on assignment
     # force assignments to be to local variables, non-fatal on assignment errors
     W_FORCELOCAL = 1 << 29
 
@@ -183,7 +187,7 @@ class WordDescFlag(Enum):
         elif self == WordDescFlag.W_FORCELOCAL:
             return "force_local"
         else:
-            raise Exception('invalid word description flag')
+            raise Exception("invalid word description flag")
 
 
 def word_desc_flag_list_from_int(flag_int: int) -> list[WordDescFlag]:
@@ -213,6 +217,7 @@ class CommandFlag(Enum):
     """
     represents command flags present in several command types
     """
+
     CMD_WANT_SUBSHELL = 1 << 0  # user wants subshell
     CMD_FORCE_SUBSHELL = 1 << 1  # shell needs to force subshell
     CMD_INVERT_RETURN = 1 << 2  # invert the exit value
@@ -279,7 +284,7 @@ class CommandFlag(Enum):
         elif self == CommandFlag.CMD_TRY_OPTIMIZING:
             return "try_optimizing"
         else:
-            raise Exception('invalid command flag')
+            raise Exception("invalid command flag")
 
 
 def command_flag_list_from_int(flag_int: int) -> list[CommandFlag]:
@@ -309,6 +314,7 @@ class CommandType(Enum):
     """
     a command type enum
     """
+
     CM_FOR = 0  # for loop
     CM_CASE = 1  # switch case
     CM_WHILE = 2  # while loop
@@ -372,13 +378,14 @@ class CommandType(Enum):
         elif self == CommandType.CM_COPROC:
             return "coproc"
         else:
-            raise Exception('invalid command type')
+            raise Exception("invalid command type")
 
 
 class RInstruction(Enum):
     """
     a redirection instruction enum
     """
+
     R_OUTPUT_DIRECTION = 0  # >foo
     R_INPUT_DIRECTION = 1  # <foo
     R_INPUTA_DIRECTION = 2  # foo & makes this -- might not be used
@@ -417,53 +424,54 @@ class RInstruction(Enum):
         :return: the string representation of the redirection type
         """
         if self == RInstruction.R_OUTPUT_DIRECTION:
-            return '>'
+            return ">"
         elif self == RInstruction.R_INPUT_DIRECTION:
-            return '<'
+            return "<"
         elif self == RInstruction.R_INPUTA_DIRECTION:
-            return '&'  # ?
+            return "&"  # ?
         elif self == RInstruction.R_APPENDING_TO:
-            return '>>'
+            return ">>"
         elif self == RInstruction.R_READING_UNTIL:
-            return '<<'
+            return "<<"
         elif self == RInstruction.R_READING_STRING:
-            return '<<<'
+            return "<<<"
         elif self == RInstruction.R_DUPLICATING_INPUT:
-            return '<&'
+            return "<&"
         elif self == RInstruction.R_DUPLICATING_OUTPUT:
-            return '>&'
+            return ">&"
         elif self == RInstruction.R_DEBLANK_READING_UNTIL:
-            return '<<-'
+            return "<<-"
         elif self == RInstruction.R_CLOSE_THIS:
-            return '<&-'
+            return "<&-"
         elif self == RInstruction.R_ERR_AND_OUT:
-            return '&>'
+            return "&>"
         elif self == RInstruction.R_INPUT_OUTPUT:
-            return '<>'
+            return "<>"
         elif self == RInstruction.R_OUTPUT_FORCE:
-            return '>|'
+            return ">|"
         elif self == RInstruction.R_DUPLICATING_INPUT_WORD:
-            return '<&$'  # todo figure out if $ is needed
+            return "<&$"  # todo figure out if $ is needed
         elif self == RInstruction.R_DUPLICATING_OUTPUT_WORD:
-            return '>&$'  # todo figure out if $ is needed
+            return ">&$"  # todo figure out if $ is needed
         elif self == RInstruction.R_MOVE_INPUT:
-            return '<&-'
+            return "<&-"
         elif self == RInstruction.R_MOVE_OUTPUT:
-            return '>&-'
+            return ">&-"
         elif self == RInstruction.R_MOVE_INPUT_WORD:
-            return '<&$-'  # todo figure out if $ is needed
+            return "<&$-"  # todo figure out if $ is needed
         elif self == RInstruction.R_MOVE_OUTPUT_WORD:
-            return '>&$-'  # todo figure out if $ is needed
+            return ">&$-"  # todo figure out if $ is needed
         elif self == RInstruction.R_APPEND_ERR_AND_OUT:
-            return '&>>'
+            return "&>>"
         else:
-            raise Exception('invalid redirect instruction')
+            raise Exception("invalid redirect instruction")
 
 
 class CondTypeEnum(Enum):
     """
     a conditional expression type enum
     """
+
     COND_AND = 1
     COND_OR = 2
     COND_UNARY = 3
@@ -484,19 +492,19 @@ class CondTypeEnum(Enum):
         :return: the string representation of the conditional expression type
         """
         if self == CondTypeEnum.COND_AND:
-            return 'and'
+            return "and"
         elif self == CondTypeEnum.COND_OR:
-            return 'or'
+            return "or"
         elif self == CondTypeEnum.COND_UNARY:
-            return 'unary'
+            return "unary"
         elif self == CondTypeEnum.COND_BINARY:
-            return 'binary'
+            return "binary"
         elif self == CondTypeEnum.COND_TERM:
-            return 'term'
+            return "term"
         elif self == CondTypeEnum.COND_EXPR:
-            return 'expression'
+            return "expression"
         else:
-            raise Exception('invalid conditional expression type')
+            raise Exception("invalid conditional expression type")
 
 
 class ConnectionType(Enum):
@@ -505,6 +513,7 @@ class ConnectionType(Enum):
     in the bash source code for more information, pretty funny approach
     to this
     """
+
     AMPERSAND = 38
     SEMICOLON = 59
     NEWLINE = 10
@@ -529,25 +538,26 @@ class ConnectionType(Enum):
         :return: the string representation of the connection type
         """
         if self == ConnectionType.AMPERSAND:
-            return '&'
+            return "&"
         elif self == ConnectionType.SEMICOLON:
-            return ';'
+            return ";"
         elif self == ConnectionType.NEWLINE:
-            return '\n'
+            return "\n"
         elif self == ConnectionType.PIPE:
-            return '|'
+            return "|"
         elif self == ConnectionType.AND_AND:
-            return '&&'
+            return "&&"
         elif self == ConnectionType.OR_OR:
-            return '||'
+            return "||"
         else:
-            raise Exception('invalid connection type')
+            raise Exception("invalid connection type")
 
 
 class RedirectFlag(Enum):
     """
     a redirect flag enum
     """
+
     REDIR_VARASSIGN = 1 << 0
 
     def __eq__(self, other: object) -> bool:
@@ -563,9 +573,9 @@ class RedirectFlag(Enum):
         :return: the string representation of the redirect flag
         """
         if self == RedirectFlag.REDIR_VARASSIGN:
-            return 'var_assign'
+            return "var_assign"
         else:
-            raise Exception('invalid redirect flag')
+            raise Exception("invalid redirect flag")
 
 
 def redirect_flag_list_from_rflags(rflags: int) -> list[RedirectFlag]:
@@ -594,6 +604,7 @@ class PatternFlag(Enum):
     """
     a pattern flag enum, present in the CasePattern class
     """
+
     CASEPAT_FALLTHROUGH = 1 << 0  # fall through to next pattern
     CASEPAT_TESTNEXT = 1 << 1  # test next pattern
 
@@ -613,11 +624,11 @@ class PatternFlag(Enum):
         :return: the string representation of the pattern flag
         """
         if self == PatternFlag.CASEPAT_FALLTHROUGH:
-            return 'fallthrough'
+            return "fallthrough"
         elif self == PatternFlag.CASEPAT_TESTNEXT:
-            return 'test_next'
+            return "test_next"
         else:
-            raise Exception('invalid pattern flag')
+            raise Exception("invalid pattern flag")
 
 
 def pattern_flag_list_from_int(flag_int: int) -> list[PatternFlag]:

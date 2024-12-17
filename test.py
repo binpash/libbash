@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
 import sys
 
 from libbash.api import bash_to_ast, ast_to_bash, ast_to_json
@@ -7,11 +11,11 @@ import random
 
 # The file path to the bash.so file
 BASH_FILE_PATH = os.path.join(os.path.dirname(
-    __file__), "bash-5.2", "bash.so")
+    __file__), "libbash", "bash-5.2", "bash.so")
 
 # The file path to the bash-5.2/tests directory
 BASH_TESTS_DIR = os.path.join(os.path.dirname(
-    __file__), "bash-5.2", "tests")
+    __file__), "libbash", "bash-5.2", "tests")
 
 
 def get_test_files() -> list[str]:
@@ -111,7 +115,7 @@ def read_from_file(file: str) -> bytes:
 
 def test_bash_and_ast_consistency():
     """
-    This test runs bash_to_ast and ast_to_bash on every test file in the bash-5.2/tests directory 
+    This test runs bash_to_ast and ast_to_bash on every test file in the bash-5.2/tests directory
     back and forth NUM_ITERATIONS times. On each iteration it makes sure that the AST is the same as the previous iteration.
     It also makes sure that the bash file is the same as the previous iteration excluding the first iteration.
     Finally if getting the AST fails, it will make sure that it fails consistently.
@@ -177,6 +181,12 @@ def run_tests():
     Runs all the tests in this file
     """
     print("Running tests...")
-    test_bash_and_ast_consistency()
+    try:
+        test_bash_and_ast_consistency()
+    except AssertionError:
+        print("Test failed!")
+        sys.exit(1)
     print("All tests passed!")
-    
+
+if __name__ == "__main__":
+    run_tests()
