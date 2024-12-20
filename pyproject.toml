@@ -22,3 +22,9 @@ Issues = "https://github.com/binpash/libbash/issues"
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.cibuildwheel.macos]
+# doesn't work for some reason
+# shouldn't be necessary since bash has no
+# dependencies besides libc (checked on linux with audit wheel)
+repair-wheel-command = ""
