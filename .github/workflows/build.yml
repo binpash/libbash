@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        submodules: true  # Optional, use if you have submodules
+        submodules: true
 
     - name: Build SDist
       run: pipx run build --sdist
