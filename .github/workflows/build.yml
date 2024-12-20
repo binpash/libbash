@@ -32,30 +32,34 @@ jobs:
         with:
           submodules: 'true'
 
-      - name: Upgrade pip and build
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install --upgrade build
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.22.0
 
-      - name: Build wheel
-        run: python3 -m build
-            
       - name: Upload binary wheel
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: ./dist/*.whl
+          name: cibw-wheels-${{ matrix.os }}
+          path: ./wheelhouse/*.whl
       
   deploy:
+    environment:
+      name: pypi
+      url: https://pypi.org/p/libbash
     needs:
       - check-version-numbers
       - package-python
+    permissions:
+      id-token: write
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags')
       
     steps:
       - name: Download distributions
         uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: cibw-*
+          merge-multiple: true
 
       - name: Deploy test distribution to Test PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
