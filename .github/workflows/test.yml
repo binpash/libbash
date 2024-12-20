@@ -15,7 +15,10 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - ubuntu-20.04 # earliest pash supports currently
           - ubuntu-latest
+          - macos-13
+          - macos-latest
     runs-on: ${{ matrix.os }}
     if: github.event.pull_request.draft == false
     steps:
