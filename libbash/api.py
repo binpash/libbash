@@ -62,7 +62,7 @@ def ast_to_bash(ast: list[Command], write_to: str):
     for comm in ast:
         command_string = bash.make_command_string(comm._to_ctypes())
         bash_str += command_string
-        bash_str += "\n".encode("utf-8")
+        bash_str += "\n".encode("utf-8") if not bash_str.endswith(b"\n") else b""
 
     with open(write_to, "wb") as f:
         # don't decode the bytes, just write them to the file
